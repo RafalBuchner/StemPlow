@@ -5,7 +5,7 @@
 #
 #	Commercial license. Not to be given to other people.
 #
-#	Copyright 2018 by Yanone.
+#	Copyright 2018 by Rafal Buchner.
 #	Twitter: @rafalbuchner
 #   email: rafalbuchner@gmail.com
 #
