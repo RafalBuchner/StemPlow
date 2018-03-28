@@ -22,7 +22,7 @@ def drawTextBox(p,txt,w,h,s):
     w = w/4*(len(txt)-1)###TEST
     save()
     bcColor = (.6,.6,.8)
-    dashLine(None)
+    lineDash(None)
     x,y = p
     x -= w/2
     y -= h/2
@@ -97,7 +97,7 @@ class StemPlowTool(EditingTool):
 
                     fill(0.1,0.2,0.3,.95)
 
-                    dashLine(10*(scale))
+                    lineDash(10*(scale))
                     stroke(1,0,0)
                     line(*thicknessLine1)
 
@@ -120,7 +120,7 @@ class StemPlowTool(EditingTool):
 
                     fill(0.1,0.2,0.3,.95)
 
-                    dashLine(10*(scale))
+                    lineDash(10*(scale))
                     stroke(0,0,1)
                     line(*thicknessLine2)
 
@@ -262,8 +262,8 @@ class StemPlowTool(EditingTool):
 
             angle1 = TMath_binary.angle(*guideline1)
             posX,posY = self.position
-            self.g.addGuide(closestPointOnPath,angle1)
-            self.g.guides[-1].showMeasurements = 1
+            self.g.appendGuideline(closestPointOnPath,angle1)
+            self.g.guidelines[-1].showMeasurements = 1
 
     def getToolbarIcon(self):
         return self.toolbar_icon
