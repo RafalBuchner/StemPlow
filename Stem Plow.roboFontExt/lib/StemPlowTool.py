@@ -17,6 +17,8 @@ from mojo.tools import IntersectGlyphWithLine
 from mojo.UI import UpdateCurrentGlyphView
 from mojo.drawingTools import *
 import TMath_binary
+from Cocoa import (NSFont, NSFontAttributeName,
+    NSColor, NSForegroundColorAttributeName)
 
 def drawTextBox(p,txt,w,h,s):
     w = w/4*(len(txt)-1)###TEST
@@ -52,6 +54,7 @@ class StemPlowTool(EditingTool):
         self.closestPointOnPath = None
         self.isThickness1 = None
         self.isThickness2 = None
+        self.view = self.getNSView()
 
     def mouseMoved(self, point):
         self.position = point
@@ -61,7 +64,7 @@ class StemPlowTool(EditingTool):
     def drawBackground(self, scale):
         # scale = 1/scale
 
-        self.g= CurrentGlyph()
+        self.g= self.getGlyph()
         if self.position:
             thickness1 = 0
             thickness2 = 0
@@ -128,7 +131,17 @@ class StemPlowTool(EditingTool):
                 if round(thickness1) != 0:
                     self.isThickness1 = True
 
-                    drawTextBox(centre1,str(round(thickness1,2)),34*(scale),18*(scale),4*(scale))
+                    #drawTextBox(centre1,str(round(thickness1,2)),34*(scale),18*(scale),4*(scale))
+
+                    ####
+                    font1 = NSFont.fontWithName_size_("Monaco", 18.0)
+                    color1 = NSColor.redColor()
+                    attr = {
+                            NSFontAttributeName: font1,
+                            NSForegroundColorAttributeName: color1
+                        }
+                    self.view.drawTextInRect(str(round(thickness1,2)), attr, centre1, yOffset=0, xOffset=0, drawBackground=False, position="center", backgroundColor=None)
+                    #                        inputText,              attributes, pos, yOffset=0, xOffset=0, drawBackground=False, position="center", backgroundColor=None
 
                 self.isThickness2 = False
                 if round(thickness2) != 0:
@@ -219,7 +232,7 @@ class StemPlowTool(EditingTool):
         ]
 
     def stemPlowGuide(self, sender):
-        self.g= CurrentGlyph()
+        self.g = self.getGlyph()
         closestPointsRef = []
 
         if self.position != (-3000,-3000): # if anchor exist
