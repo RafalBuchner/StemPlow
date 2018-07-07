@@ -20,23 +20,27 @@ import TMath_binary
 from Cocoa import (NSFont, NSFontAttributeName,
     NSColor, NSForegroundColorAttributeName)
 
-def drawTextBox(p,txt,w,h,s):
-    w = w/4*(len(txt)-1)###TEST
-    save()
-    bcColor = (.6,.6,.8)
-    lineDash(None)
-    x,y = p
-    x -= w/2
-    y -= h/2
-    fill(*bcColor)
-    stroke(*bcColor)
-    strokeWidth(s)
-    lineJoin('round')
-    rect(x, y, w, h)
-    fill(1)
-    stroke(None)
-    textBox(txt, (x, y, w, h), align="center")
-    restore()
+icon_file_name = 'StemPlow-icon.pdf'
+dirname = os.path.dirname(__file__)
+toolbar_icon = NSImage.alloc().initByReferencingFile_(os.path.join(dirname, icon_file_name))
+
+# def drawTextBox(p,txt,w,h,s):
+#     w = w/4*(len(txt)-1)###TEST
+#     save()
+#     bcColor = (.6,.6,.8)
+#     lineDash(None)
+#     x,y = p
+#     x -= w/2
+#     y -= h/2
+#     fill(*bcColor)
+#     stroke(*bcColor)
+#     strokeWidth(s)
+#     lineJoin('round')
+#     rect(x, y, w, h)
+#     fill(1)
+#     stroke(None)
+#     textBox(txt, (x, y, w, h), align="center")
+#     restore()
 
 def drawPoint(p,s=10,color=(0.6,0.2,0.5)):
     x,y=p
@@ -45,9 +49,6 @@ def drawPoint(p,s=10,color=(0.6,0.2,0.5)):
     oval(x-s/2,y-s/2,s,s)
 
 class StemPlowTool(EditingTool):
-    icon_file_name = 'StemPlow-icon.pdf'
-    dirname = os.path.dirname(__file__)
-    toolbar_icon = NSImage.alloc().initByReferencingFile_(os.path.join(dirname, icon_file_name))
 
     def setup(self):
         self.position = None
@@ -289,6 +290,6 @@ class StemPlowTool(EditingTool):
             self.g.guidelines[-1].showMeasurements = 1
 
     def getToolbarIcon(self):
-        return self.toolbar_icon
+        return toolbar_icon
 
 installTool(StemPlowTool())
