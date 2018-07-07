@@ -140,7 +140,10 @@ class StemPlowTool(EditingTool):
                             NSFontAttributeName: font1,
                             NSForegroundColorAttributeName: color1
                         }
-                    self.view.drawTextInRect(str(round(thickness1,2)), attr, centre1, yOffset=0, xOffset=0, drawBackground=False, position="center", backgroundColor=None)
+                    #help(self.view.drawTextInRect)
+                    # Copy it to the other measurement
+                    self.view._drawTextInRect(str(round(thickness1,2)),
+                    attr, centre1, yOffset=0, xOffset=0, drawBackground=True, position="center", backgroundColor=color1)
                     #                        inputText,              attributes, pos, yOffset=0, xOffset=0, drawBackground=False, position="center", backgroundColor=None
 
                 self.isThickness2 = False
