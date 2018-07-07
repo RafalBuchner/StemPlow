@@ -134,7 +134,7 @@ class StemPlowTool(EditingTool):
                     #drawTextBox(centre1,str(round(thickness1,2)),34*(scale),18*(scale),4*(scale))
 
                     ####
-                    font1 = NSFont.fontWithName_size_("Monaco", 18.0)
+                    font1 = NSFont.fontWithName_size_("Monaco", 10.0)
                     color1 = NSColor.redColor()
                     attr = {
                             NSFontAttributeName: font1,
@@ -143,14 +143,21 @@ class StemPlowTool(EditingTool):
                     #help(self.view.drawTextInRect)
                     # Copy it to the other measurement
                     self.view._drawTextInRect(str(round(thickness1,2)),
-                    attr, centre1, yOffset=0, xOffset=0, drawBackground=True, position="center", backgroundColor=color1)
+                    attr, centre1, yOffset=0, xOffset=0, drawBackground=False, position="center", backgroundColor=None)
                     #                        inputText,              attributes, pos, yOffset=0, xOffset=0, drawBackground=False, position="center", backgroundColor=None
 
                 self.isThickness2 = False
                 if round(thickness2) != 0:
+                    font1 = NSFont.fontWithName_size_("Monaco", 10.0)
+                    color1 = NSColor.blueColor()
+                    attr = {
+                            NSFontAttributeName: font1,
+                            NSForegroundColorAttributeName: color1
+                        }
                     self.isThickness2 = True
-
-                    drawTextBox(centre2,str(round(thickness2,2)),34*(scale),18*(scale),4*(scale))
+                    self.view._drawTextInRect(str(round(thickness1,2)),
+                    attr, centre2, yOffset=0, xOffset=0, drawBackground=False, position="center", backgroundColor=None)
+                    #drawTextBox(centre2,str(round(thickness2,2)),34*(scale),18*(scale),4*(scale))
 
 
 
