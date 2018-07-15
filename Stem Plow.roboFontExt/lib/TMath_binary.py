@@ -1,14 +1,13 @@
-from __future__ import division
-from fontTools.misc.bezierTools import splitCubicAtT
-# import line_profiler
-import math
 """
 Author: Rafal Buchner
 Date: 10.12.2017
 """
+from __future__ import division
+from fontTools.misc.bezierTools import splitCubicAtT, splitQuadraticAtT
+# import line_profiler
+import math
 
-
-def closestPointAndT_binaryIndexSearch(pointOffCurve, *points):
+def closestPointAndT_binaryIndexSearch(pointOffCurve,segType, *points):
     """Returns returns the curve, which is segment cutted from the given curve. """
     curveDiv = 3
 
@@ -21,8 +20,8 @@ def closestPointAndT_binaryIndexSearch(pointOffCurve, *points):
         if count == 10:
             break
         count += 1
-
-        LUT = getLut(curveDiv, *points)
+        #print(f"closestPointAndT_binaryIndexSearch\nlen{len(points)}\npoints{points}")###TESt
+        LUT = getLut(segType,curveDiv, *points)
         minimalDist = 20000
 
 
@@ -35,7 +34,7 @@ def closestPointAndT_binaryIndexSearch(pointOffCurve, *points):
                 t = n[1]
 
 
-        points1,points2 = splitSegAtT(points,.5)
+        points1,points2 = splitSegAtT(segType,points,.5)
 
         if t >= .5:
             points = points2
@@ -45,16 +44,17 @@ def closestPointAndT_binaryIndexSearch(pointOffCurve, *points):
 
     return points
 
-def stemThicnkessGuidelines(cursorPoint, *points):
+def stemThicnkessGuidelines(cursorPoint,segType, *points):
     """
         calculate guidelines for stem thickness
         returnt two lines, every line has two points
         every point is represented as a touple with x, y values
     """
-    curve = closestPointAndT_binaryIndexSearch(cursorPoint, *points)
+    #print(f"stemThicnkessGuidelines\nlen{len(points)}\npoints{points}")###TESt
+    curve = closestPointAndT_binaryIndexSearch(cursorPoint,segType, *points)
     closestPointx,closestPointy = calcSeg(0.5,*curve)
 
-    guide1,guide2 = getPerpedicularLineToTangent(.5,*curve)
+    guide1,guide2 = getPerpedicularLineToTangent(segType,.5,*curve)
     guide1A,guide1B = guide1
     guide2A,guide2B = guide2
 
@@ -75,21 +75,24 @@ def stemThicnkessGuidelines(cursorPoint, *points):
     return ((guide1Ax,guide1Ay),(guide1Bx,guide1By)),((guide2Ax,guide2Ay),(guide2Bx,guide2By))
 
 
-def getLut( accuracy=100, *points):
+def getLut( segType, accuracy=100, *points):
     """Returns Look Up Table, which contains pointsOnPath for calcBezier/calcLine,
     if getT=True then returns table with points and their factors"""
     lut_table = {}
 
-
+    #print(f"getLut\nlen{len(points)}\npoints{points}")###TESt
     for i in range(accuracy+1):
         t=i/accuracy
 
-        if len(points) == 4:
+        if len(points) == 4 and segType != "qcurve":
             calc = calcBezier(t,*points)
+        elif len(points) == 4 and segType == "qcurve":
+            calc = calcQbezier(t,*points)
         elif len(points) == 2:
             calc = calcLine(t,*points)
 
         lut_table[(i,t)] = calc
+        #######
 
     return lut_table
 
@@ -121,17 +124,39 @@ def bs(searchFor,array):
 
     raise AssertionError("The value wasn't found in the array")
 
-def splitSegAtT(points,*t):
+def splitSegAtT(segType, points,*t):
     if len(points) == 2:
         assert isinstance(t[0], float), "splitSegAtT ERROR: t is not a float"
         a,b = points
         segments = splitLineAtT(a,b, *t)
     if len(points) == 4:
-        a,b,c,d = points
 
-        segments = splitCubicAtT(a,b,c,d, *t)
+        a,b,c,d = points
+        if segType == "qcurve":####WIP
+
+            segments = splitQatT(a,b,c,d, *t)
+        else:
+            segments = splitCubicAtT(a,b,c,d, *t)
 
     return segments
+def splitQatT(p1,h1,h2,p2, t):########WIP NIE SĄDZĘ ABY MOJ POMYSL DZIALAL
+    # ### later change it to *ts
+    # c = calcLine(.5,h1,h2)
+    # if t <= 0.5:
+    #     t_segment = t*2
+    #     return splitQuadraticAtT(p1,h1,c,t_segment)
+    # else:
+    #     t_segment = (t-0.5)*2
+    #     return splitQuadraticAtT(p2,h2,c,t_segment)
+    # splitQuadraticAtT()
+
+    """divides ROBOFONT quadratic bezier paths (wich are strange, stored as pairs of two curves) into two, t factor here is only for having consistency between this version and cubic. This factor should be 0.5"""
+    c = calcLine(.5,h1,h2)
+    split_1 = splitQuadraticAtT(p1,h1,c,t)
+    split_2 = splitQuadraticAtT(p2,h2,c,t)
+    div1 = [split_1[0][0],split_1[0][1],split_1[1][1],split_1[1][2]]
+    div2 = list(reversed([split_2[0][0],split_2[0][1],split_2[1][1],split_2[1][2]]))
+    return [div1,div2]
 
 def splitLineAtT(a,b, *ts):
     '''Splits line into two at given t-factors (where 1>t>0)
@@ -229,6 +254,33 @@ def calcBezier(t, *pointList):
 
     return x, y
 
+def calcQbezier(t,*pointList):
+    """returns coordinates for factor called "t"(from 0 to 1). Based on Quadratic Bezier formula.
+    """
+    def calcQuadraticBezier(t,*pointList):
+        assert len(pointList) == 3 and isinstance(t, float)
+        p1x,p1y = pointList[0]
+        p2x,p2y = pointList[1]
+        p3x,p3y = pointList[2]
+        x = (1-t)**2*p1x + 2*(1-t)*t*p2x+t**2*p3x
+        y = (1-t)**2*p1y + 2*(1-t)*t*p2y+t**2*p3y
+        return x, y
+
+    assert len(pointList) == 4 and isinstance(t, float)
+    p1 = pointList[0]
+    h1 = pointList[1]
+    h2 = pointList[2]
+    p2 = pointList[3]
+    c = calcLine(.5, h1,h2)
+    if t <= 0.5:
+        t_segment = t*2
+        return calcQuadraticBezier(t_segment,p1,h1,c)
+    else:
+        t_segment = (t-0.5)*2
+        return calcQuadraticBezier(t_segment,p2,h2,c)
+
+
+
 
 def calcLine(t, *pointList):
     """returns coordinates for factor called "t"(from 0 to 1). Based on cubic bezier formula.
@@ -246,15 +298,12 @@ def calcLine(t, *pointList):
 
 def interpolation(v1, v2, t):
     """one-dimentional bezier curve equation for interpolating"""
-    # if isinstance(v1, tuple):
-        # print(">interpolation>###TEST: {} v1 is a tuple".format(v1))
-    # if isinstance(v2, tuple):
-        # print(">interpolation>###TEST: {} v2 is a tuple".format(v2))
     vt = v1 * (1 - t) + v2 * t
     return vt
 
 def derivativeBezier(t,*pointList):
     """ calculates derivative values for given control points and current t-factor """
+    ### http://www.idav.ucdavis.edu/education/CAGDNotes/Quadratic-Bezier-Curves.pdf ### Quadratic
     p1x,p1y = pointList[0]
     p2x,p2y = pointList[1]
     p3x,p3y = pointList[2]
@@ -262,33 +311,69 @@ def derivativeBezier(t,*pointList):
 
     summaX = -3*p1x*(1 - t)**2 + p2x*(3*(1 - t)**2 - 6*(1 - t)*t) + p3x*(6*(1 - t)*t - 3*t**2) + 3*p4x*t**2
     summaY = -3*p1y*(1 - t)**2 + p2y*(3*(1 - t)**2 - 6*(1 - t)*t) + p3y*(6*(1 - t)*t - 3*t**2) + 3*p4y*t**2
-    return summaX,summaY
 
-def calculateTangentAngle(t, *points):
+    return summaX,summaY
+def derivativeQBezier(t,*pointList):
+    def derivativeQuadraticBezier(t,*pointList):
+        """ calculates derivative values for given control points and current t-factor """
+        p1x,p1y = pointList[0]
+        p2x,p2y = pointList[1]
+        p3x,p3y = pointList[2]
+
+        summaY = 2*(1-t)*(p2y-p1y) + 2*t*(p3y-p2y)
+        summaX = 2*(1-t)*(p2x-p1x) + 2*t*(p3x-p2x)
+
+        return summaX,summaY
+
+    assert len(pointList) == 4 and isinstance(t, float)
+    p1 = pointList[0]
+    h1 = pointList[1]
+    h2 = pointList[2]
+    p2 = pointList[3]
+    c = calcLine(.5, h1,h2)
+    if t <= 0.5:
+        t_segment = t*2
+        return derivativeQuadraticBezier(t_segment,p1,h1,c)
+    else:
+        t_segment = (t-0.5)*2
+        return derivativeQuadraticBezier(t_segment,p2,h2,c)
+
+
+def calculateTangentAngle(segType,t, *points):
     """Calculates tangent angle for curve's/lines's current t-factor"""
-    if len(points) == 4:
+    if len(points) == 4 and segType != "qcurve":
         xT,yT = calcBezier(t, *points)
         xB,yB = derivativeBezier(t,*points)
-
+    if len(points) == 4 and segType == "qcurve":
+        xT,yT = calcQbezier(t, *points)
+        xB,yB = derivativeQBezier(t,*points)
     if len(points) == 2:
         xB,yB = points[-1]
 
     return angle((0,0),(xB,yB))
 
-def getPerpedicularLineToTangent(t,*points):
+def getPerpedicularLineToTangent(segType,t,*points):
     """ Calculates 2 perpedicular lines to curve's/line's tangent angle with current t-factor. It places it in the position 00
         returnt two lines, every line has two points
         every point is represented as a touple with x, y values.
         Lines starting point is at 0,0 of canvas
     """
 
-    if len(points) == 4:
+    if len(points) == 4 and segType != "qcurve":
         # P1,P2,P3,P4 = points
         xT,yT = calcBezier(t, *points)
         if t == 0: # exception for dividing by zero in calculateTangentAngle
             t = 0.001
 
-        tanAngle = calculateTangentAngle(t, *points)
+        tanAngle = calculateTangentAngle(segType,t, *points)
+
+    if len(points) == 4 and segType == "qcurve":
+        # P1,P2,P3,P4 = points
+        xT,yT = calcQbezier(t, *points)
+        if t == 0: # exception for dividing by zero in calculateTangentAngle
+            t = 0.001
+
+        tanAngle = calculateTangentAngle(segType,t, *points)
 
     if len(points) == 2:
         xT,yT = calcLine(t, *points)
@@ -306,7 +391,3 @@ def getPerpedicularLineToTangent(t,*points):
     tanPx1,tanPy1 = rotatePoint( (0,1000),tanAngle, (0,0)) # oneLine
     tanPx2,tanPy2 = rotatePoint( (0,1000),tanAngle-180, (0,0)) # secondLine - extention of the second line in the other direction
     return ((tanPx1,tanPy1),(0,0)) , ((0,0),(tanPx2,tanPy2))
-
-
-
-###################

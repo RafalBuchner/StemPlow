@@ -15,32 +15,15 @@ from AppKit import NSImage
 from mojo.events import EditingTool, installTool
 from mojo.tools import IntersectGlyphWithLine
 from mojo.UI import UpdateCurrentGlyphView
+from mojo.extensions import ExtensionBundle
 from mojo.drawingTools import *
 import TMath_binary
 from Cocoa import (NSFont, NSFontAttributeName,
     NSColor, NSForegroundColorAttributeName)
 
-icon_file_name = 'StemPlow-icon.pdf'
-dirname = os.path.dirname(__file__)
-toolbar_icon = NSImage.alloc().initByReferencingFile_(os.path.join(dirname, icon_file_name))
 
-# def drawTextBox(p,txt,w,h,s):
-#     w = w/4*(len(txt)-1)###TEST
-#     save()
-#     bcColor = (.6,.6,.8)
-#     lineDash(None)
-#     x,y = p
-#     x -= w/2
-#     y -= h/2
-#     fill(*bcColor)
-#     stroke(*bcColor)
-#     strokeWidth(s)
-#     lineJoin('round')
-#     rect(x, y, w, h)
-#     fill(1)
-#     stroke(None)
-#     textBox(txt, (x, y, w, h), align="center")
-#     restore()
+bundle = ExtensionBundle("Stem Plow")
+toolbar_icon = bundle.getResourceImage("StemPlow-icon",ext='pdf')
 
 def drawPoint(p,s=10,color=(0.6,0.2,0.5)):
     x,y=p
@@ -156,7 +139,7 @@ class StemPlowTool(EditingTool):
                             NSForegroundColorAttributeName: color1
                         }
                     self.isThickness2 = True
-                    self.view._drawTextInRect(str(round(thickness1,2)),
+                    self.view._drawTextInRect(str(round(thickness2,2)),
                     attr, centre2, yOffset=0, xOffset=0, drawBackground=False, position="center", backgroundColor=None)
                     #drawTextBox(centre2,str(round(thickness2,2)),34*(scale),18*(scale),4*(scale))
 
@@ -200,14 +183,13 @@ class StemPlowTool(EditingTool):
                             continue
 
                         P1,P2=((P1.x,P1.y),(P2.x,P2.y))
-
-                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,P1,P2)
+                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,seg.type,P1,P2)
 
 
                     if len(points) == 4:
                         P1,P2,P3,P4=points
                         P1,P2,P3,P4=((P1.x,P1.y),(P2.x,P2.y),(P3.x,P3.y),(P4.x,P4.y))
-                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,P1,P2,P3,P4)
+                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,seg.type,P1,P2,P3,P4)
 
 
                     closestPoint = l1[1]
@@ -243,6 +225,8 @@ class StemPlowTool(EditingTool):
         ]
 
     def stemPlowGuide(self, sender):
+        bundle = ExtensionBundle("Stem Plow")
+        print(bundle.get("StemPlow-icon"))
         self.g = self.getGlyph()
         closestPointsRef = []
 
@@ -262,13 +246,14 @@ class StemPlowTool(EditingTool):
                     if len(points) == 2:
                         P1,P2=points
                         P1,P2=((P1.x,P1.y),(P2.x,P2.y))
-                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,P1,P2)
+                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,seg.type,P1,P2)
+
 
 
                     if len(points) == 4:
                         P1,P2,P3,P4=points
                         P1,P2,P3,P4=((P1.x,P1.y),(P2.x,P2.y),(P3.x,P3.y),(P4.x,P4.y))
-                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,P1,P2,P3,P4)
+                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,seg.type,P1,P2,P3,P4)
 
                     closestPoint = l1[1]
                     closestPointsRef.append((closestPoint,l1,l2))
