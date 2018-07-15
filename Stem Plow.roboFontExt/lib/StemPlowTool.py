@@ -112,35 +112,34 @@ class StemPlowTool(EditingTool):
                     line(*thicknessLine2)
 
                 self.isThickness1 = False
+
+                if round(thickness1) != 0 or round(thickness2) != 0:
+                    ####
+                    font1 = NSFont.fontWithName_size_("Monaco", 10.0)
+                    color1 = NSColor.whiteColor()
+                    bcColor = NSColor.grayColor()
+                    attr = {
+                            NSFontAttributeName: font1,
+                            NSForegroundColorAttributeName: color1
+                        }
                 if round(thickness1) != 0:
                     self.isThickness1 = True
 
                     #drawTextBox(centre1,str(round(thickness1,2)),34*(scale),18*(scale),4*(scale))
 
-                    ####
-                    font1 = NSFont.fontWithName_size_("Monaco", 10.0)
-                    color1 = NSColor.redColor()
-                    attr = {
-                            NSFontAttributeName: font1,
-                            NSForegroundColorAttributeName: color1
-                        }
+
                     #help(self.view.drawTextInRect)
                     # Copy it to the other measurement
                     self.view._drawTextInRect(str(round(thickness1,2)),
-                    attr, centre1, yOffset=0, xOffset=0, drawBackground=False, position="center", backgroundColor=None)
+                    attr, centre1, yOffset=0, xOffset=0, drawBackground=True, position="center", backgroundColor=bcColor)
                     #                        inputText,              attributes, pos, yOffset=0, xOffset=0, drawBackground=False, position="center", backgroundColor=None
 
                 self.isThickness2 = False
                 if round(thickness2) != 0:
-                    font1 = NSFont.fontWithName_size_("Monaco", 10.0)
-                    color1 = NSColor.blueColor()
-                    attr = {
-                            NSFontAttributeName: font1,
-                            NSForegroundColorAttributeName: color1
-                        }
+
                     self.isThickness2 = True
                     self.view._drawTextInRect(str(round(thickness2,2)),
-                    attr, centre2, yOffset=0, xOffset=0, drawBackground=False, position="center", backgroundColor=None)
+                    attr, centre2, yOffset=0, xOffset=0, drawBackground=True, position="center", backgroundColor=bcColor)
                     #drawTextBox(centre2,str(round(thickness2,2)),34*(scale),18*(scale),4*(scale))
 
 
@@ -226,7 +225,7 @@ class StemPlowTool(EditingTool):
 
     def stemPlowGuide(self, sender):
         bundle = ExtensionBundle("Stem Plow")
-        print(bundle.get("StemPlow-icon"))
+        #print(bundle.get("StemPlow-icon"))
         self.g = self.getGlyph()
         closestPointsRef = []
 
