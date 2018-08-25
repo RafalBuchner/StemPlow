@@ -46,7 +46,6 @@ class StemPlowTool(EditingTool):
         UpdateCurrentGlyphView()
 
     def drawBackground(self, scale):
-        # scale = 1/scale
 
         self.g= self.getGlyph()
         if self.position:
@@ -171,6 +170,7 @@ class StemPlowTool(EditingTool):
 
                     # rebuilding segment into system 2 points for line and 4 for curve (TMath_binary needs it):
                     points = [segs[segIndex-1][-1]] # 1adding last point from previous segment
+
                     for point in seg.points:
                         points.append(point) # 2 adding rest of points of the segment
 
@@ -189,6 +189,7 @@ class StemPlowTool(EditingTool):
                         P1,P2,P3,P4=points
                         P1,P2,P3,P4=((P1.x,P1.y),(P2.x,P2.y),(P3.x,P3.y),(P4.x,P4.y))
                         l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,seg.type,P1,P2,P3,P4)
+                        #### TODO: Jesli seg.type == qcurve, to przerob to na TMath_binary.stemThicnkessGuidelines(self.position,seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
 
 
                     closestPoint = l1[1]

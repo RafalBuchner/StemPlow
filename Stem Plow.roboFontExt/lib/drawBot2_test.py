@@ -49,11 +49,11 @@ def splitQtwo(p1,h1,h2,p2, t=0.5):
     split_1 = splitQuadraticAtT(p1,h1,c,t)
     split_2 = splitQuadraticAtT(p2,h2,c,t)
     div1 = [split_1[0][0],split_1[0][1],split_1[1][1],split_1[1][2]]
-    
+
     div2 = list(reversed([split_2[0][0],split_2[0][1],split_2[1][1],split_2[1][2]]))
-    
-    print(f"c {p1}")
-    print(f"div {[div1,div2]}")
+
+    #print(f"c {p1}")
+    #print(f"div {[div1,div2]}")
     return [div1,div2]
 
 for curve in splitQtwo(p1,p2,p3,p4):
@@ -71,4 +71,3 @@ for curve in splitQtwo(p1,p2,p3,p4):
     fill(1,0,0)
     # for p in [p1,p2,p3,p4]:
     #     drawPoint(p)
-    

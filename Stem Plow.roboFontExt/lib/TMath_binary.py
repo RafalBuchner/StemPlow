@@ -1,11 +1,14 @@
 """
 Author: Rafal Buchner
 Date: 10.12.2017
+Mozesz to zmienic tak,ze quadratic bedzie przemielany przed wejsciem w funkcje z TMath_binary.
 """
 from __future__ import division
 from fontTools.misc.bezierTools import splitCubicAtT, splitQuadraticAtT
 # import line_profiler
 import math
+
+
 
 def closestPointAndT_binaryIndexSearch(pointOffCurve,segType, *points):
     """Returns returns the curve, which is segment cutted from the given curve. """
@@ -86,8 +89,10 @@ def getLut( segType, accuracy=100, *points):
 
         if len(points) == 4 and segType != "qcurve":
             calc = calcBezier(t,*points)
+
         elif len(points) == 4 and segType == "qcurve":
             calc = calcQbezier(t,*points)
+
         elif len(points) == 2:
             calc = calcLine(t,*points)
 
@@ -133,7 +138,6 @@ def splitSegAtT(segType, points,*t):
 
         a,b,c,d = points
         if segType == "qcurve":####WIP
-
             segments = splitQatT(a,b,c,d, *t)
         else:
             segments = splitCubicAtT(a,b,c,d, *t)
