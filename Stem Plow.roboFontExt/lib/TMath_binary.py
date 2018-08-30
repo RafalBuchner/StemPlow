@@ -14,10 +14,13 @@ import math
 
 def closestPointAndT_binaryIndexSearch(pointOffCurve,segType, *points):
     """Returns returns the curve, which is segment cutted from the given curve. """
-    if segType != 'qcurve':
-        curveDiv = 3
-    else:
-        curveDiv = 12
+
+    ### Quicker?
+    # if segType != 'qcurve':
+    #     curveDiv = 3
+    # else:
+    #     curveDiv = 12
+    curveDiv = 12
 
     lowerBound = 0
     upperBound = curveDiv - 1
@@ -84,35 +87,35 @@ def stemThicnkessGuidelines(cursorPoint,segType, *points):
     return ((guide1Ax,guide1Ay),(guide1Bx,guide1By)),((guide2Ax,guide2Ay),(guide2Bx,guide2By))
 
 
-def getLut( segType, accuracy=3, *points):
+def getLut( segType, accuracy=12, *points):
     """Returns Look Up Table, which contains pointsOnPath for calcBezier/calcLine,
     if getT=True then returns table with points and their factors"""
     lut_table = {}
 
     #print(f"getLut\nlen{len(points)}\npoints{points}")###TESt
-    if segType != "qcurve":
-        # print('otherCurve') ###TEST
-        for i in range(accuracy+1):
-            t=i/accuracy
 
-            if len(points) == 4 and segType != "qcurve":
-                calc = calcBezier(t,*points)
+    # print('otherCurve') ###TEST
+    for i in range(accuracy+1):
+        t=i/accuracy
 
-            elif len(points) == 4 and segType == "qcurve":
-                calc = calcQbezier(t,*points)
+        if len(points) == 4 and segType != "qcurve":
+            calc = calcBezier(t,*points)
 
-            elif len(points) == 2:
-                calc = calcLine(t,*points)
-
-            lut_table[(i,t)] = calc
-            #######
-    if segType == "qcurve":
-
-        accuracy = 12
-        for i in range(accuracy+1):
-            t=i/accuracy
+        elif len(points) == 4 and segType == "qcurve":
             calc = calcQbezier(t,*points)
-            lut_table[(i,t)] = calc
+
+        elif len(points) == 2:
+            calc = calcLine(t,*points)
+
+        lut_table[(i,t)] = calc
+        #######
+    # if segType == "qcurve":
+    #
+    #     accuracy = 12
+    #     for i in range(accuracy+1):
+    #         t=i/accuracy
+    #         calc = calcQbezier(t,*points)
+    #         lut_table[(i,t)] = calc
     # print(lut_table) ###TEST
     return lut_table
 
