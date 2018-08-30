@@ -1,7 +1,9 @@
 """
 Author: Rafal Buchner
-Date: 10.12.2017
-Mozesz to zmienic tak,ze quadratic bedzie przemielany przed wejsciem w funkcje z TMath_binary.
+Date: 30.8.2018
+
+Warning: this code is compatible only with RoboFont3!!!
+
 """
 from __future__ import division
 from fontTools.misc.bezierTools import splitCubicAtT, splitQuadraticAtT
@@ -12,7 +14,10 @@ import math
 
 def closestPointAndT_binaryIndexSearch(pointOffCurve,segType, *points):
     """Returns returns the curve, which is segment cutted from the given curve. """
-    curveDiv = 3
+    if segType != 'qcurve':
+        curveDiv = 3
+    else:
+        curveDiv = 12
 
     lowerBound = 0
     upperBound = curveDiv - 1
@@ -24,12 +29,13 @@ def closestPointAndT_binaryIndexSearch(pointOffCurve,segType, *points):
             break
         count += 1
         #print(f"closestPointAndT_binaryIndexSearch\nlen{len(points)}\npoints{points}")###TESt
-        LUT = getLut(segType,curveDiv, *points)
+        LUT = getLut(segType, curveDiv, *points)
         minimalDist = 20000
 
 
         for i in range(curveDiv+1):
             n = (i,i/curveDiv)
+            # print(f"\n\n\nTEST::::::\n {LUT}\n\n\n")
             distance = lenghtAB(pointOffCurve, LUT[n])
 
             if distance < minimalDist:
@@ -78,27 +84,36 @@ def stemThicnkessGuidelines(cursorPoint,segType, *points):
     return ((guide1Ax,guide1Ay),(guide1Bx,guide1By)),((guide2Ax,guide2Ay),(guide2Bx,guide2By))
 
 
-def getLut( segType, accuracy=100, *points):
+def getLut( segType, accuracy=3, *points):
     """Returns Look Up Table, which contains pointsOnPath for calcBezier/calcLine,
     if getT=True then returns table with points and their factors"""
     lut_table = {}
 
     #print(f"getLut\nlen{len(points)}\npoints{points}")###TESt
-    for i in range(accuracy+1):
-        t=i/accuracy
+    if segType != "qcurve":
+        # print('otherCurve') ###TEST
+        for i in range(accuracy+1):
+            t=i/accuracy
 
-        if len(points) == 4 and segType != "qcurve":
-            calc = calcBezier(t,*points)
+            if len(points) == 4 and segType != "qcurve":
+                calc = calcBezier(t,*points)
 
-        elif len(points) == 4 and segType == "qcurve":
+            elif len(points) == 4 and segType == "qcurve":
+                calc = calcQbezier(t,*points)
+
+            elif len(points) == 2:
+                calc = calcLine(t,*points)
+
+            lut_table[(i,t)] = calc
+            #######
+    if segType == "qcurve":
+
+        accuracy = 12
+        for i in range(accuracy+1):
+            t=i/accuracy
             calc = calcQbezier(t,*points)
-
-        elif len(points) == 2:
-            calc = calcLine(t,*points)
-
-        lut_table[(i,t)] = calc
-        #######
-
+            lut_table[(i,t)] = calc
+    # print(lut_table) ###TEST
     return lut_table
 
 
@@ -144,15 +159,7 @@ def splitSegAtT(segType, points,*t):
 
     return segments
 def splitQatT(p1,h1,h2,p2, t):########WIP NIE SĄDZĘ ABY MOJ POMYSL DZIALAL
-    # ### later change it to *ts
-    # c = calcLine(.5,h1,h2)
-    # if t <= 0.5:
-    #     t_segment = t*2
-    #     return splitQuadraticAtT(p1,h1,c,t_segment)
-    # else:
-    #     t_segment = (t-0.5)*2
-    #     return splitQuadraticAtT(p2,h2,c,t_segment)
-    # splitQuadraticAtT()
+
 
     """divides ROBOFONT quadratic bezier paths (wich are strange, stored as pairs of two curves) into two, t factor here is only for having consistency between this version and cubic. This factor should be 0.5"""
     c = calcLine(.5,h1,h2)
