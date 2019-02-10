@@ -17,11 +17,9 @@
 	<key>name</key>
 	<string>StemPlow</string>
 	<key>requiresVersionMajor</key>
-	<string>1</string>
-	<key>requiresVersionMinor</key>
-	<string>8</string>
+	<string>3</string>
 	<key>timeStamp</key>
-	<real>1521480673.898911</real>
+	<real>1549805030.038229</real>
 	<key>version</key>
 	<string>1.0</string>
 </dict>
