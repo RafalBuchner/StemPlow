@@ -22,7 +22,7 @@ from Cocoa import (NSFont, NSFontAttributeName,
     NSColor, NSForegroundColorAttributeName)
 
 
-bundle = ExtensionBundle("Stem Plow")
+bundle = ExtensionBundle("StemPlow")
 toolbar_icon = bundle.getResourceImage("StemPlow-icon",ext='pdf')
 
 def drawPoint(p,s=10,color=(0.6,0.2,0.5)):
