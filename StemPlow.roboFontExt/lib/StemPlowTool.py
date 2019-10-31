@@ -7,7 +7,7 @@
 #
 #	Copyright 2018 by Rafal Buchner.
 #	Twitter: @rafalbuchner
-#   email: rafalbuchner@gmail.com
+#   email: hello@rafalbuchner.com
 #
 ##########################################################################################
 import os

@@ -1,9 +1,6 @@
 """
 Author: Rafal Buchner
 Date: 30.8.2018
-
-Warning: this code is compatible only with RoboFont3!!!
-
 """
 from __future__ import division
 from fontTools.misc.bezierTools import splitCubicAtT, splitQuadraticAtT
