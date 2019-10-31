@@ -145,14 +145,15 @@ class StemPlowTool(EditingTool):
 
             # drawPoint(self.position,s=6*(scale))
     def draw(self,scale):
-        if StemMath.lenghtAB(self.position,self.closestPointOnPath) < 77 and self.closestPointOnPath != None:
-            drawPoint(self.closestPointOnPath,s=7*(scale),color=(1,.4,0))
+        if self.closestPointOnPath is not None:
+            if StemMath.lenghtAB(self.position,self.closestPointOnPath) < 77:
+                drawPoint(self.closestPointOnPath,s=7*(scale),color=(1,.4,0))
 
-            if self.isThickness1:
-                drawPoint(self.nearestP1,s=7*(scale),color=(1,0,0))
+                if self.isThickness1:
+                    drawPoint(self.nearestP1,s=7*(scale),color=(1,0,0))
 
-            if self.isThickness2:
-                drawPoint(self.nearestP2,s=7*(scale),color=(0,0,1))
+                if self.isThickness2:
+                    drawPoint(self.nearestP2,s=7*(scale),color=(0,0,1))
 
     def getToolbarTip(self):
         return "Stem Plow tool"
