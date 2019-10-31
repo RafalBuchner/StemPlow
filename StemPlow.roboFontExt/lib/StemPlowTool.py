@@ -17,7 +17,7 @@ from mojo.tools import IntersectGlyphWithLine
 from mojo.UI import UpdateCurrentGlyphView
 from mojo.extensions import ExtensionBundle
 from mojo.drawingTools import *
-import TMath_binary
+import StemMath
 from Cocoa import (NSFont, NSFontAttributeName,
     NSColor, NSForegroundColorAttributeName)
 
@@ -54,7 +54,7 @@ class StemPlowTool(EditingTool):
 
 
             guideline1, guideline2, self.closestPointOnPath = self.keyDownDraw()
-            if TMath_binary.lenghtAB(self.position,self.closestPointOnPath) < 77:
+            if StemMath.lenghtAB(self.position,self.closestPointOnPath) < 77:
                 intersectionAB1 = IntersectGlyphWithLine(self.g, guideline1)
                 intersectionAB2 = IntersectGlyphWithLine(self.g, guideline2)
 
@@ -66,7 +66,7 @@ class StemPlowTool(EditingTool):
                 # system of if-statemens to hack the iteration through nearestPoints = self.nearestPointFromList(self.closestPointOnPath,intersectionAB) kind of lists
                 if len(intersectionAB1) != 0:
                     nearestPoints1 = self.nearestPointFromList(self.closestPointOnPath,intersectionAB1)
-                    if TMath_binary.lenghtAB(nearestPoints1[0],self.closestPointOnPath) < 2.5 :
+                    if StemMath.lenghtAB(nearestPoints1[0],self.closestPointOnPath) < 2.5 :
 
                         # hack for guidelines going into space
                         if len(nearestPoints1) == 1:
@@ -77,8 +77,8 @@ class StemPlowTool(EditingTool):
                     else:
                         self.nearestP1 = nearestPoints1[0]
 
-                    centre1 = TMath_binary.calcLine(.5,self.closestPointOnPath,self.nearestP1)
-                    thickness1 = TMath_binary.lenghtAB(self.closestPointOnPath,self.nearestP1)
+                    centre1 = StemMath.calcLine(.5,self.closestPointOnPath,self.nearestP1)
+                    thickness1 = StemMath.lenghtAB(self.closestPointOnPath,self.nearestP1)
                     thicknessLine1 = (self.closestPointOnPath,self.nearestP1)
 
                     fill(0.1,0.2,0.3,.95)
@@ -90,7 +90,7 @@ class StemPlowTool(EditingTool):
                 # system of if-statemens to hack the iteration through nearestPoints = self.nearestPointFromList(self.closestPointOnPath,intersectionAB) kind of lists
                 if len(intersectionAB2) != 0:
                     nearestPoints2 = self.nearestPointFromList(self.closestPointOnPath,intersectionAB2)
-                    if TMath_binary.lenghtAB(nearestPoints2[0],self.closestPointOnPath) < 2.5 :
+                    if StemMath.lenghtAB(nearestPoints2[0],self.closestPointOnPath) < 2.5 :
 
                         # hack for guidelines going into space
                         if len(nearestPoints2) == 1:
@@ -100,8 +100,8 @@ class StemPlowTool(EditingTool):
                     else:
                         self.nearestP2 = nearestPoints2[0]
 
-                    centre2 = TMath_binary.calcLine(.5,self.closestPointOnPath,self.nearestP2)
-                    thickness2 = TMath_binary.lenghtAB(self.closestPointOnPath,self.nearestP2)
+                    centre2 = StemMath.calcLine(.5,self.closestPointOnPath,self.nearestP2)
+                    thickness2 = StemMath.lenghtAB(self.closestPointOnPath,self.nearestP2)
                     thicknessLine2 = (self.closestPointOnPath,self.nearestP2)
 
                     fill(0.1,0.2,0.3,.95)
@@ -145,7 +145,7 @@ class StemPlowTool(EditingTool):
 
             # drawPoint(self.position,s=6*(scale))
     def draw(self,scale):
-        if TMath_binary.lenghtAB(self.position,self.closestPointOnPath) < 77 and self.closestPointOnPath != None:
+        if StemMath.lenghtAB(self.position,self.closestPointOnPath) < 77 and self.closestPointOnPath != None:
             drawPoint(self.closestPointOnPath,s=7*(scale),color=(1,.4,0))
 
             if self.isThickness1:
@@ -168,7 +168,7 @@ class StemPlowTool(EditingTool):
 
                 for segIndex, seg in enumerate(segs):
 
-                    # rebuilding segment into system 2 points for line and 4 for curve (TMath_binary needs it):
+                    # rebuilding segment into system 2 points for line and 4 for curve (StemMath needs it):
                     points = [segs[segIndex-1][-1]] # 1adding last point from previous segment
 
                     for point in seg.points:
@@ -182,14 +182,14 @@ class StemPlowTool(EditingTool):
                             continue
 
                         P1,P2=((P1.x,P1.y),(P2.x,P2.y))
-                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,seg.type,P1,P2)
+                        l1,l2 = StemMath.stemThicnkessGuidelines(self.position,seg.type,P1,P2)
 
 
                     if len(points) == 4:
                         P1,P2,P3,P4=points
                         P1,P2,P3,P4=((P1.x,P1.y),(P2.x,P2.y),(P3.x,P3.y),(P4.x,P4.y))
-                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,seg.type,P1,P2,P3,P4)
-                        #### TODO: Jesli seg.type == qcurve, to przerob to na TMath_binary.stemThicnkessGuidelines(self.position,seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
+                        l1,l2 = StemMath.stemThicnkessGuidelines(self.position,seg.type,P1,P2,P3,P4)
+                        #### TODO: Jesli seg.type == qcurve, to przerob to na StemMath.stemThicnkessGuidelines(self.position,seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
 
 
                     closestPoint = l1[1]
@@ -199,7 +199,7 @@ class StemPlowTool(EditingTool):
 
             for ref in closestPointsRef:
                 point = ref[0]
-                distance = TMath_binary.lenghtAB(self.position,point)
+                distance = StemMath.lenghtAB(self.position,point)
                 distances.append(distance)
 
             indexOfClosestPoint = distances.index(min(distances))
@@ -214,7 +214,7 @@ class StemPlowTool(EditingTool):
     def nearestPointFromList(self,myPoint,points):
 
         def _sorter(point):
-            return TMath_binary.lenghtAB(myPoint, point)
+            return StemMath.lenghtAB(myPoint, point)
 
         points = sorted(points, key=_sorter)
         return points
@@ -238,7 +238,7 @@ class StemPlowTool(EditingTool):
                 for seg in segs:
                     segIndex = segs.index(seg)
 
-                    # rebuilding segment into system 2 points for line and 4 for curve (TMath_binary needs it):
+                    # rebuilding segment into system 2 points for line and 4 for curve (StemMath needs it):
                     points = [segs[segIndex-1][-1]] # 1adding last point from previous segment
                     for point in seg.points:
                         points.append(point) # 2 adding rest of points of the segment
@@ -246,14 +246,14 @@ class StemPlowTool(EditingTool):
                     if len(points) == 2:
                         P1,P2=points
                         P1,P2=((P1.x,P1.y),(P2.x,P2.y))
-                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,seg.type,P1,P2)
+                        l1,l2 = StemMath.stemThicnkessGuidelines(self.position,seg.type,P1,P2)
 
 
 
                     if len(points) == 4:
                         P1,P2,P3,P4=points
                         P1,P2,P3,P4=((P1.x,P1.y),(P2.x,P2.y),(P3.x,P3.y),(P4.x,P4.y))
-                        l1,l2 = TMath_binary.stemThicnkessGuidelines(self.position,seg.type,P1,P2,P3,P4)
+                        l1,l2 = StemMath.stemThicnkessGuidelines(self.position,seg.type,P1,P2,P3,P4)
 
                     closestPoint = l1[1]
                     closestPointsRef.append((closestPoint,l1,l2))
@@ -262,14 +262,14 @@ class StemPlowTool(EditingTool):
 
             for ref in closestPointsRef:
                 point = ref[0]
-                distance = TMath_binary.lenghtAB(self.position,point)
+                distance = StemMath.lenghtAB(self.position,point)
                 distances.append(distance)
 
             indexOfClosestPoint = distances.index(min(distances))
             closestPointOnPathRef = closestPointsRef[indexOfClosestPoint]
             closestPointOnPath, guideline1, guideline2 = closestPointOnPathRef
 
-            angle1 = TMath_binary.angle(*guideline1)
+            angle1 = StemMath.angle(*guideline1)
             posX,posY = self.position
             self.g.appendGuideline(closestPointOnPath,angle1)
             self.g.guidelines[-1].showMeasurements = 1
