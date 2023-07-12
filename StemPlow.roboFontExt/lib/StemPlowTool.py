@@ -40,18 +40,22 @@ class StemPlowTool(EditingTool):
             location="foreground",
             clear=True)
 
-        self.pointerLayer = container.appendOvalSublayer(
-            position=(0, 0),
-            anchor=(.5, .5),
-            size=(10*3, 10*3),
-            strokeColor=(0, 1, 1, .5),
-            strokeWidth=5,
-            fillColor=None
+        self.merzGuide1 = container.appendLineSublayer(
+           startPoint=(0, 0),
+           endPoint=(0, 0),
+           strokeWidth=1,
+           strokeColor=(1, 0, 0, 1)
+        )
+        self.merzGuide2 = container.appendLineSublayer(
+           startPoint=(0, 0),
+           endPoint=(0, 0),
+           strokeWidth=1,
+           strokeColor=(0, 0, 1, 1)
         )
 
     def mouseMoved(self, point):
         x, y = point.x, point.y
-        self.pointerLayer.setPosition((x, y))
+        self.merzGuide1.setStartPoint((x, y))
 
     def additionContextualMenuItems(self):
         return [
