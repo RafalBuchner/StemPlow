@@ -3,7 +3,18 @@
 <plist version="1.0">
 <dict>
 	<key>addToMenu</key>
-	<array/>
+	<array>
+		<dict>
+			<key>nestInSubmenus</key>
+			<true/>
+			<key>path</key>
+			<string>StemPlowSettings.py</string>
+			<key>preferredName</key>
+			<string>StemPlowSettings</string>
+			<key>shortKey</key>
+			<string></string>
+		</dict>
+	</array>
 	<key>developer</key>
 	<string>Rafał Buchner</string>
 	<key>developerURL</key>
@@ -19,7 +30,7 @@
 	<key>requiresVersionMajor</key>
 	<string>4</string>
 	<key>timeStamp</key>
-	<real>1689200199.9782348</real>
+	<real>1689234723.676445</real>
 	<key>version</key>
 	<string>1.2</string>
 </dict>
