@@ -1,3 +1,4 @@
+import AppKit
 import StemMath
 from mojo import subscriber
 from mojo import events
@@ -14,7 +15,7 @@ extensionKeyStub = extensionID + "."
 
 
 defaults = {
-    extensionKeyStub + "triggerCharacter": "s",
+    extensionKeyStub + "triggerCharacter": "f",
     extensionKeyStub + "lineColor": (0, 0.3, 1, 0.8),
     extensionKeyStub + "ovalColor": (0, 0.3, 1, 0.8),
     extensionKeyStub + "textColor": (1, 1, 1, 0.8),
@@ -25,8 +26,7 @@ defaults = {
     extensionKeyStub + "measureAgainsComponents": True,
     extensionKeyStub + "measureAgainsSideBearings": True,
 }
-for key in defaults.keys(): # DEL
-    removeExtensionDefault(key)
+
 registerExtensionDefaults(defaults)
 
 
@@ -173,9 +173,6 @@ class StemPlow(subscriber.Subscriber):
     def glyphEditorDidKeyUp(self, info):
         self.hideLayers()
         self.wantsMeasurements = False
-
-    def glyphEditorDidRightMouseDown(self, info):
-        print(f"glyphEditorDidRightMouseUp")
 
     def glyphEditorDidMouseDown(self, info):
         self.hideLayers()
@@ -431,4 +428,8 @@ class StemPlow(subscriber.Subscriber):
 
 
 def main():
+    if AppKit.NSUserName() == "rafalbuchner":
+        for key in defaults.keys():
+            removeExtensionDefault(key)
+        registerExtensionDefaults(defaults)
     subscriber.registerGlyphEditorSubscriber(StemPlow)

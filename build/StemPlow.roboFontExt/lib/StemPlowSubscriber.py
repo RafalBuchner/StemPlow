@@ -96,7 +96,6 @@ class StemPlow(subscriber.Subscriber):
         # load
 
         self.triggerCharacter = internalGetDefault("triggerCharacter")
-        print((self.triggerCharacter))
         self.measureAgainsComponents = internalGetDefault("measureAgainsComponents")
         self.measureAgainsSideBearings = internalGetDefault("measureAgainsSideBearings")
         self.measurementOvalSize = internalGetDefault("measurementOvalSize")
@@ -174,9 +173,6 @@ class StemPlow(subscriber.Subscriber):
     def glyphEditorDidKeyUp(self, info):
         self.hideLayers()
         self.wantsMeasurements = False
-
-    def glyphEditorDidRightMouseDown(self, info):
-        print(f"glyphEditorDidRightMouseUp")
 
     def glyphEditorDidMouseDown(self, info):
         self.hideLayers()

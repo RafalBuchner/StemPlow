@@ -8,17 +8,17 @@ from StemPlowSubscriber import (
     extensionID
 )
 
-print(extensionID,
-internalGetDefault("measureAgainsComponents"),
-internalGetDefault("measureAgainsSideBearings"),
-internalGetDefault("triggerCharacter"),
-internalGetDefault("measurementTextSize"),
-internalGetDefault("textColor"),
-internalGetDefault("measurementLineSize"),
-internalGetDefault("measurementOvalSize"),
-internalGetDefault("mainColor"),
-internalGetDefault("lineColor"),
-internalGetDefault("ovalColor") )
+# print(extensionID,
+# internalGetDefault("measureAgainsComponents"),
+# internalGetDefault("measureAgainsSideBearings"),
+# internalGetDefault("triggerCharacter"),
+# internalGetDefault("measurementTextSize"),
+# internalGetDefault("textColor"),
+# internalGetDefault("measurementLineSize"),
+# internalGetDefault("measurementOvalSize"),
+# internalGetDefault("mainColor"),
+# internalGetDefault("lineColor"),
+# internalGetDefault("ovalColor") )
 
 class _StemPlowSettingsWindowController(ezui.WindowController):
 
@@ -126,20 +126,55 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
     def started(self):
         self.w.open()
 
-    def contentCallback(self, sender):
-        for key, value in sender.getItemValues().items():
-            existing = internalGetDefault(key)
-            print(key, value, existing)
-            if existing == value:
-                continue
-            internalSetDefault(key, value)
+    def measureAgainsComponentsCallback(self, sender):
+        self.mainCallback(sender)
+
+    def measureAgainsSideBearingsCallback(self, sender):
+        self.mainCallback(sender)
+
+    def triggerCharacterCallback(self, sender):
+        self.mainCallback(sender)
+
+    def measurementTextSizeCallback(self, sender):
+        self.mainCallback(sender)
+
+    def textColorCallback(self, sender):
+        self.mainCallback(sender)
+
+    def measurementLineSizeCallback(self, sender):
+        self.mainCallback(sender)
+
+    def measurementOvalSizeCallback(self, sender):
+        self.mainCallback(sender)
+
+    def mainColorCallback(self, sender):
+        self.mainCallback(sender)
+
+    def lineColorCallback(self, sender):
+        self.mainCallback(sender)
+
+    def ovalColorCallback(self, sender):
+        self.mainCallback(sender)
+
+    def mainCallback(self, sender):
+        print(">> contentCallback", sender)
+        key = sender.identifier
+        value = sender.get()
+        print(value)
+        # for key, value in sender.getItemValues().items():
+        existing = internalGetDefault(key)
+        
+        if existing == value:
+            return
+        if key == "triggerCharacter":
+            if len(sender.get()) != 1:
+                print(len(sender.get()))
+                return
+        internalSetDefault(key, value)
         postEvent(
             extensionID + ".defaultsChanged"
         )
 
-    def triggerCharacterCallback(self, sender):
-        if len(sender.get()) == 1:
-            self.contentCallback(sender)
 
 
 note = """
