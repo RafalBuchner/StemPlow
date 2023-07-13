@@ -21,7 +21,9 @@ defaults = {
     extensionKeyStub + "mainColor": (0.1, 0.1, 0.2, 0.8),
     extensionKeyStub + "measurementOvalSize": 6,
     extensionKeyStub + "measurementLineSize": 1,
-    extensionKeyStub + "measurementTextSize": 14,
+    extensionKeyStub + "measurementTextSize": 10,
+    extensionKeyStub + "measureAgainsComponents": True,
+    extensionKeyStub + "measureAgainsSideBearings": True,
 }
 for key in defaults.keys(): # DEL
     removeExtensionDefault(key)
@@ -61,10 +63,11 @@ class StemPlow(subscriber.Subscriber):
             location="foreground",
             clear=True,
         )
+        self.fgBaseLayer = self.foregroundContainer.appendBaseSublayer()
+        self.bgBaseLayer = self.backgroundContainer.appendBaseSublayer()
 
         # text
 
-        self.fgBaseLayer = self.foregroundContainer.appendBaseSublayer()
 
         self.text1Layer = self.fgBaseLayer.appendTextLineSublayer(
             visible=False, name="measurementValue1"
@@ -73,10 +76,9 @@ class StemPlow(subscriber.Subscriber):
             visible=False, name="measurementValue2"
         )
 
-        # outline
+        # geometry
 
-        self.bgBaseLayer = self.backgroundContainer.appendBaseSublayer()
-        self.lineLayer = self.bgBaseLayer.appendLineSublayer()
+        self.lineLayer   = self.bgBaseLayer.appendLineSublayer()
         self.oval_ALayer = self.bgBaseLayer.appendSymbolSublayer()
         self.oval_BLayer = self.fgBaseLayer.appendSymbolSublayer()
         self.oval_CLayer = self.bgBaseLayer.appendSymbolSublayer()
@@ -94,6 +96,8 @@ class StemPlow(subscriber.Subscriber):
         # load
 
         self.triggerCharacter = internalGetDefault("triggerCharacter")
+        self.measureAgainsComponents = internalGetDefault("measureAgainsComponents")
+        self.measureAgainsSideBearings = internalGetDefault("measureAgainsSideBearings")
         self.measurementOvalSize = internalGetDefault("measurementOvalSize")
         measurementLineSize = internalGetDefault("measurementLineSize")
         textSize = internalGetDefault("measurementTextSize")
@@ -111,19 +115,17 @@ class StemPlow(subscriber.Subscriber):
             horizontalAlignment="center",
             verticalAlignment="center",
             pointSize=textSize,
-            font="Menlo",
             weight="bold",
-            offset=(0,0)
+            figureStyle="tabular"
         )
         ovalAttributes = dict(size=(self.measurementOvalSize,self.measurementOvalSize), fillColor=ovalColor, name="oval")
-        # print(ovalAttributes)
-        # populate
+        
         self.text1Layer.setPropertiesByName(textAttributes)
         self.text2Layer.setPropertiesByName(textAttributes)
         self.lineLayer.setPropertiesByName(lineAttributes)
 
         for oval in [self.oval_ALayer, self.oval_BLayer, self.oval_CLayer]:
-            oval.setImageSettings(ovalAttributes) ####
+            oval.setImageSettings(ovalAttributes)
 
     def destroy(self):
         self.backgroundContainer.clearSublayers()
@@ -147,9 +149,6 @@ class StemPlow(subscriber.Subscriber):
 
     def extensionDefaultsChanged(self, event):
         self.loadDefaults()
-
-    # def glyphEditorDidSetGlyph(self, info):
-    #     self.g = info["glyph"]
 
     wantsMeasurements = False
     closestPointOnPath = None
@@ -175,14 +174,18 @@ class StemPlow(subscriber.Subscriber):
         self.hideLayers()
         self.wantsMeasurements = False
 
+    def glyphEditorDidRightMouseDown(self, info):
+        print(f"glyphEditorDidRightMouseUp")
+
     def glyphEditorDidMouseDown(self, info):
         self.hideLayers()
-        # setCursorMode(None)
 
     def glyphEditorDidMouseMove(self, info):
         if not self.wantsMeasurements:
             return
         glyph = info["glyph"]
+        if len(glyph.contours) + len(glyph.components) == 0:
+                return
         cursorPosition = tuple(info["locationInGlyph"])
         
         (
@@ -195,17 +198,71 @@ class StemPlow(subscriber.Subscriber):
             self.closestPointOnPath
         ) = self.getThicknessData(cursorPosition, glyph)
 
-
-        # self.visibleP1 = False
-        # if self.nearestP1 == cursorPosition:
-        #     self.visibleP1 = True
-        # self.visibleP2 = False
-        # if self.nearestP2 == cursorPosition:
-        #     self.visibleP2 = True
-
         self.updateText()
         self.updateLinesAndOvals()
 
+    def glyphEditorWantsContextualMenuItems(self, info):
+        def _stemPlowGuide( sender):
+            glyph = info["glyph"]
+            if len(glyph.contours) + len(glyph.components) == 0:
+                return
+            
+            cursorPosition = tuple(info["locationInGlyph"])
+            
+            closestPointsRef = []
+
+            if cursorPosition is None:
+                return
+
+            for contour in glyph.contours:
+                segs = contour.segments
+
+                for seg in segs:
+                    segIndex = segs.index(seg)
+
+                    # rebuilding segment into system 2 points for line and 4 for curve (StemMath needs it):
+                    points = [segs[segIndex-1][-1]] # 1adding last point from previous segment
+                    for point in seg.points:
+                        points.append(point) # 2 adding rest of points of the segment
+
+                    if len(points) == 2:
+                        P1,P2=points
+                        P1,P2=((P1.x,P1.y),(P2.x,P2.y))
+                        l1,l2 = StemMath.stemThicnkessGuidelines(cursorPosition,seg.type,P1,P2)
+
+
+
+                    if len(points) == 4:
+                        P1,P2,P3,P4=points
+                        P1,P2,P3,P4=((P1.x,P1.y),(P2.x,P2.y),(P3.x,P3.y),(P4.x,P4.y))
+                        l1, l2 = StemMath.stemThicnkessGuidelines(cursorPosition, seg.type, P1,P2,P3,P4)
+
+                    closestPoint = l1[1]
+                    closestPointsRef.append((closestPoint,l1,l2))
+
+            distances = []
+
+            for ref in closestPointsRef:
+                point = ref[0]
+                distance = StemMath.lenghtAB(cursorPosition,point)
+                distances.append(distance)
+
+            indexOfClosestPoint = distances.index(min(distances))
+            closestPointOnPathRef = closestPointsRef[indexOfClosestPoint]
+            closestPointOnPath, guideline1, guideline2 = closestPointOnPathRef
+
+            angle1 = StemMath.angle(*guideline1)
+            posX,posY = cursorPosition
+            glyph.appendGuideline(closestPointOnPath,angle1)
+            glyph.guidelines[-1].showMeasurements = 1
+
+        myMenuItems = [
+            ("Create Stem Plow Guide", _stemPlowGuide)
+        ]
+        info["itemDescriptions"].extend(myMenuItems)
+
+
+    
 
     # layers updates
     # ----
@@ -310,55 +367,57 @@ class StemPlow(subscriber.Subscriber):
 
         # position = (point.x, point.y)
 
-        textBoxCenter1 = None
-        nearestP1 = position
-        thicknessValue1 = 0
-
-        textBoxCenter2 = None
-        nearestP2 = position
-        thicknessValue2 = 0
 
         guideline1, guideline2, closestPointOnPath = self.getGuidesAndClosestPoint(
             position, glyph
         )
-        if StemMath.lenghtAB(position, closestPointOnPath) < 77:
-            intersectionAB1 = tools.IntersectGlyphWithLine(glyph, guideline1)
-            intersectionAB2 = tools.IntersectGlyphWithLine(glyph, guideline2)
 
-            # system of if-statemens to hack the iteration through nearestPoints = nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
-            if len(intersectionAB1) != 0:
-                nearestPoints1 = nearestPointFromList(
-                    closestPointOnPath, intersectionAB1
-                )
-                if StemMath.lenghtAB(nearestPoints1[0], closestPointOnPath) < 2.5:
-                    # hack for guidelines going into space
-                    if len(nearestPoints1) == 1:
-                        nearestP1 = nearestPoints1[0]
+        textBoxCenter1 = None
+        nearestP1 = closestPointOnPath
+        thicknessValue1 = 0
 
-                    else:
-                        nearestP1 = nearestPoints1[1]
-                else:
+        textBoxCenter2 = None
+        nearestP2 = closestPointOnPath
+        thicknessValue2 = 0
+
+        # if StemMath.lenghtAB(position, closestPointOnPath) < 77:
+        intersectionAB1 = tools.IntersectGlyphWithLine(glyph, guideline1, canHaveComponent=self.measureAgainsComponents, addSideBearings=self.measureAgainsSideBearings)
+        intersectionAB2 = tools.IntersectGlyphWithLine(glyph, guideline2, canHaveComponent=self.measureAgainsComponents, addSideBearings=self.measureAgainsSideBearings)
+
+        # system of if-statemens to hack the iteration through nearestPoints = nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
+        if len(intersectionAB1) != 0:
+            nearestPoints1 = nearestPointFromList(
+                closestPointOnPath, intersectionAB1
+            )
+            if StemMath.lenghtAB(nearestPoints1[0], closestPointOnPath) < 2.5:
+                # hack for guidelines going into space
+                if len(nearestPoints1) == 1:
                     nearestP1 = nearestPoints1[0]
 
-                textBoxCenter1 = StemMath.calcLine(0.5, closestPointOnPath, nearestP1)
-                thicknessValue1 = StemMath.lenghtAB(closestPointOnPath, nearestP1)
-
-            # system of if-statemens to hack the iteration through nearestPoints = self.nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
-            if len(intersectionAB2) != 0:
-                nearestPoints2 = nearestPointFromList(
-                    closestPointOnPath, intersectionAB2
-                )
-                if StemMath.lenghtAB(nearestPoints2[0], closestPointOnPath) < 2.5:
-                    # hack for guidelines going into space
-                    if len(nearestPoints2) == 1:
-                        nearestP2 = nearestPoints2[0]
-                    else:
-                        nearestP2 = nearestPoints2[1]
                 else:
-                    nearestP2 = nearestPoints2[0]
+                    nearestP1 = nearestPoints1[1]
+            else:
+                nearestP1 = nearestPoints1[0]
 
-                textBoxCenter2 = StemMath.calcLine(0.5, closestPointOnPath, nearestP2)
-                thicknessValue2 = StemMath.lenghtAB(closestPointOnPath, nearestP2)
+            textBoxCenter1 = StemMath.calcLine(0.5, closestPointOnPath, nearestP1)
+            thicknessValue1 = StemMath.lenghtAB(closestPointOnPath, nearestP1)
+
+        # system of if-statemens to hack the iteration through nearestPoints = self.nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
+        if len(intersectionAB2) != 0:
+            nearestPoints2 = nearestPointFromList(
+                closestPointOnPath, intersectionAB2
+            )
+            if StemMath.lenghtAB(nearestPoints2[0], closestPointOnPath) < 2.5:
+                # hack for guidelines going into space
+                if len(nearestPoints2) == 1:
+                    nearestP2 = nearestPoints2[0]
+                else:
+                    nearestP2 = nearestPoints2[1]
+            else:
+                nearestP2 = nearestPoints2[0]
+
+            textBoxCenter2 = StemMath.calcLine(0.5, closestPointOnPath, nearestP2)
+            thicknessValue2 = StemMath.lenghtAB(closestPointOnPath, nearestP2)
 
         return (
             textBoxCenter1,
