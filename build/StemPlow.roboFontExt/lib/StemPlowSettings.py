@@ -19,6 +19,7 @@ internalGetDefault("measurementOvalSize"),
 internalGetDefault("mainColor"),
 internalGetDefault("lineColor"),
 internalGetDefault("ovalColor") )
+
 class _StemPlowSettingsWindowController(ezui.WindowController):
 
     def build(self):
