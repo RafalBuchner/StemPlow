@@ -129,6 +129,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
     def contentCallback(self, sender):
         for key, value in sender.getItemValues().items():
             existing = internalGetDefault(key)
+            print(key, value, existing)
             if existing == value:
                 continue
             internalSetDefault(key, value)
@@ -146,7 +147,7 @@ The settings window is only available in
 RoboFont 4.2+
 """.strip()
 
-def LaserMeasureSettingsWindowController(*args, **kwargs):
+def StemPlowSettingsWindowController(*args, **kwargs):
     from mojo import roboFont
 
     version = roboFont.version
@@ -162,4 +163,4 @@ def LaserMeasureSettingsWindowController(*args, **kwargs):
         _StemPlowSettingsWindowController(*args, **kwargs)
 
 if __name__ == "__main__":
-    LaserMeasureSettingsWindowController()
+    StemPlowSettingsWindowController()

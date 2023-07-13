@@ -1,3 +1,4 @@
+import AppKit
 import StemMath
 from mojo import subscriber
 from mojo import events
@@ -95,6 +96,7 @@ class StemPlow(subscriber.Subscriber):
         # load
 
         self.triggerCharacter = internalGetDefault("triggerCharacter")
+        print((self.triggerCharacter))
         self.measureAgainsComponents = internalGetDefault("measureAgainsComponents")
         self.measureAgainsSideBearings = internalGetDefault("measureAgainsSideBearings")
         self.measurementOvalSize = internalGetDefault("measurementOvalSize")
@@ -430,4 +432,8 @@ class StemPlow(subscriber.Subscriber):
 
 
 def main():
+    if AppKit.NSUserName() == "rafalbuchner":
+        for key in defaults.keys():
+            removeExtensionDefault(key)
+        registerExtensionDefaults(defaults)
     subscriber.registerGlyphEditorSubscriber(StemPlow)
