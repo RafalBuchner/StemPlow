@@ -25,7 +25,7 @@ defaults = {
     extensionKeyStub + "measurementTextSize": 10,
     extensionKeyStub + "measureAgainsComponents": True,
     extensionKeyStub + "measureAgainsSideBearings": True,
-    extensionKeyStub + "measureUntilYouClick": False,
+    extensionKeyStub + "measureAlways": False,
 }
 
 registerExtensionDefaults(defaults)
@@ -97,7 +97,7 @@ class StemPlow(subscriber.Subscriber):
         # load
 
         self.triggerCharacter = internalGetDefault("triggerCharacter")
-        self.measureUntilYouClick = internalGetDefault("measureUntilYouClick")
+        self.measureAlways = internalGetDefault("measureAlways")
         self.measureAgainsComponents = internalGetDefault("measureAgainsComponents")
         self.measureAgainsSideBearings = internalGetDefault("measureAgainsSideBearings")
         self.measurementOvalSize = internalGetDefault("measurementOvalSize")
@@ -129,7 +129,7 @@ class StemPlow(subscriber.Subscriber):
         for oval in [self.oval_ALayer, self.oval_BLayer, self.oval_CLayer]:
             oval.setImageSettings(ovalAttributes)
 
-        # if self.measureUntilYouClick:
+        # if self.measureAlways:
         #     self.wantsMeasurements = True
         #     self.showLayers()
         #     print(self.showMeasurements, self.wantsMeasurements)
@@ -177,12 +177,12 @@ class StemPlow(subscriber.Subscriber):
         else:
             self.wantsMeasurements = True
             self.showLayers()
-        if self.measureUntilYouClick:
+        if self.measureAlways:
             self.wantsMeasurements = True
 
 
     def glyphEditorDidKeyUp(self, info):
-        if not self.measureUntilYouClick:
+        if not self.measureAlways:
             self.hideLayers()
             self.wantsMeasurements = False
 
@@ -190,7 +190,8 @@ class StemPlow(subscriber.Subscriber):
     #     self.position = tuple(info["locationInGlyph"])
 
     def glyphEditorDidMouseDown(self, info):
-        self.hideLayers()
+        if not self.measureAlways:
+            self.hideLayers()
 
     def glyphEditorDidMouseMove(self, info):
         if not self.wantsMeasurements:
