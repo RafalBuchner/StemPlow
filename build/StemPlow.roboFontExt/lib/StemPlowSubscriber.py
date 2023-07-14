@@ -25,6 +25,7 @@ defaults = {
     extensionKeyStub + "measurementTextSize": 10,
     extensionKeyStub + "measureAgainsComponents": True,
     extensionKeyStub + "measureAgainsSideBearings": True,
+    extensionKeyStub + "measureUntilYouClick": False,
 }
 
 registerExtensionDefaults(defaults)
@@ -50,7 +51,7 @@ def nearestPointFromList(myPoint, points):
 
 class StemPlow(subscriber.Subscriber):
     debug = True
-
+    wantsMeasurements = False
     def build(self):
         window = self.getGlyphEditor()
         self.backgroundContainer = window.extensionContainer(
@@ -96,6 +97,7 @@ class StemPlow(subscriber.Subscriber):
         # load
 
         self.triggerCharacter = internalGetDefault("triggerCharacter")
+        self.measureUntilYouClick = internalGetDefault("measureUntilYouClick")
         self.measureAgainsComponents = internalGetDefault("measureAgainsComponents")
         self.measureAgainsSideBearings = internalGetDefault("measureAgainsSideBearings")
         self.measurementOvalSize = internalGetDefault("measurementOvalSize")
@@ -127,6 +129,11 @@ class StemPlow(subscriber.Subscriber):
         for oval in [self.oval_ALayer, self.oval_BLayer, self.oval_CLayer]:
             oval.setImageSettings(ovalAttributes)
 
+        # if self.measureUntilYouClick:
+        #     self.wantsMeasurements = True
+        #     self.showLayers()
+        #     print(self.showMeasurements, self.wantsMeasurements)
+
     def destroy(self):
         self.backgroundContainer.clearSublayers()
         self.foregroundContainer.clearSublayers()
@@ -150,7 +157,7 @@ class StemPlow(subscriber.Subscriber):
     def extensionDefaultsChanged(self, event):
         self.loadDefaults()
 
-    wantsMeasurements = False
+    
     closestPointOnPath = None
     measurementValue1 = None
     measurementValue2 = None
@@ -160,19 +167,27 @@ class StemPlow(subscriber.Subscriber):
     nearestP2 = None
     visibleP1 = False
     visibleP2 = False
+    position = None
 
     def glyphEditorDidKeyDown(self, info):
         deviceState = info["deviceState"]
+
         if deviceState["keyDownWithoutModifiers"] != self.triggerCharacter:
             self.wantsMeasurements = False
         else:
             self.wantsMeasurements = True
             self.showLayers()
+        if self.measureUntilYouClick:
+            self.wantsMeasurements = True
 
 
     def glyphEditorDidKeyUp(self, info):
-        self.hideLayers()
-        self.wantsMeasurements = False
+        if not self.measureUntilYouClick:
+            self.hideLayers()
+            self.wantsMeasurements = False
+
+    # def glyphEditorDidRightMouseDown(self, info):
+    #     self.position = tuple(info["locationInGlyph"])
 
     def glyphEditorDidMouseDown(self, info):
         self.hideLayers()
@@ -201,10 +216,14 @@ class StemPlow(subscriber.Subscriber):
     def glyphEditorWantsContextualMenuItems(self, info):
         def _stemPlowGuide( sender):
             glyph = info["glyph"]
+
             if len(glyph.contours) + len(glyph.components) == 0:
                 return
-            
-            cursorPosition = tuple(info["locationInGlyph"])
+            # window = self.getGlyphEditor()
+            # editor = window.getGlyphView()
+            # print(window, editor)
+            # cursorPosition = editor._getMousePosition()
+            cursorPosition = self.position
             
             closestPointsRef = []
 
@@ -428,8 +447,8 @@ class StemPlow(subscriber.Subscriber):
 
 
 def main():
-    if AppKit.NSUserName() == "rafalbuchner":
-        for key in defaults.keys():
-            removeExtensionDefault(key)
-        registerExtensionDefaults(defaults)
+    # if AppKit.NSUserName() == "rafalbuchner":
+    #     for key in defaults.keys():
+    #         removeExtensionDefault(key)
+    #     registerExtensionDefaults(defaults)
     subscriber.registerGlyphEditorSubscriber(StemPlow)
