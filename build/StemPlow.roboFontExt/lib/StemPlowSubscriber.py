@@ -106,7 +106,6 @@ class StemPlow(subscriber.Subscriber):
         self.measureAlways = internalGetDefault("measureAlways")
         self.useShortcutToMoveWhileAlways = internalGetDefault("useShortcutToMoveWhileAlways")
         self.measureAgainstComponents = internalGetDefault("measureAgainstComponents")
-        self.measureAgainstSideBearings = internalGetDefault("measureAgainstSideBearings")
         self.measurementOvalSize = internalGetDefault("measurementOvalSize")
         measurementLineSize = internalGetDefault("measurementLineSize")
         textSize = internalGetDefault("measurementTextSize")
@@ -334,9 +333,10 @@ class StemPlowRuler:
     curr_t_value = 0
     curr_path_idx = 0
     curr_segment_idx = 0
-    
+
     def loadDefaults(self):
         self.measureAgainstComponents = internalGetDefault("measureAgainstComponents")
+        self.measureAgainstSideBearings = internalGetDefault("measureAgainstComponents")
 
     def getGuidesAndClosestPoint(self, cursorPosition, glyph):
         """returns 2 intersection lists"""
