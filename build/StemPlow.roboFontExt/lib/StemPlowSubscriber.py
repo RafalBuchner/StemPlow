@@ -51,9 +51,13 @@ def nearestPointFromList(myPoint, points):
 
 
 class StemPlow(subscriber.Subscriber):
+    
     debug = True
     wantsMeasurements = False
+    
     def build(self):
+        self.stemPlowRuler = StemPlowRuler()
+
         window = self.getGlyphEditor()
         self.backgroundContainer = window.extensionContainer(
             identifier=extensionKeyStub + "background",
@@ -96,6 +100,7 @@ class StemPlow(subscriber.Subscriber):
 
     def loadDefaults(self):
         # load
+        self.stemPlowRuler.loadDefaults()
 
         self.triggerCharacter = internalGetDefault("triggerCharacter")
         self.measureAlways = internalGetDefault("measureAlways")
@@ -210,7 +215,7 @@ class StemPlow(subscriber.Subscriber):
             self.measurementValue2,
             self.nearestP2,
             self.closestPointOnPath
-        ) = self.getThicknessData(cursorPosition, glyph)
+        ) = self.stemPlowRuler.getThicknessData(cursorPosition, glyph)
 
         self.updateText()
         self.updateLinesAndOvals()
@@ -322,6 +327,16 @@ class StemPlow(subscriber.Subscriber):
             self.text2Layer.setVisible(False)
     # calculations
     # ------------
+
+    
+
+class StemPlowRuler:
+    curr_t_value = 0
+    curr_path_idx = 0
+    curr_segment_idx = 0
+    
+    def loadDefaults(self):
+        self.measureAgainstComponents = internalGetDefault("measureAgainstComponents")
 
     def getGuidesAndClosestPoint(self, cursorPosition, glyph):
         """returns 2 intersection lists"""
