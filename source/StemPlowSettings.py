@@ -9,8 +9,8 @@ from StemPlowSubscriber import (
 )
 
 print(extensionID,
-internalGetDefault("measureAgainsComponents"),
-internalGetDefault("measureAgainsSideBearings"),
+internalGetDefault("measureAgainstComponents"),
+internalGetDefault("measureAgainstSideBearings"),
 internalGetDefault("triggerCharacter"),
 internalGetDefault("measurementTextSize"),
 internalGetDefault("textColor"),
@@ -27,9 +27,9 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         = TwoColumnForm
 
         : Measure:
-        [ ] against Components                      @measureAgainsComponents
+        [ ] against Components                      @measureAgainstComponents
         :
-        [ ] against SideBearings                    @measureAgainsSideBearings
+        [ ] against SideBearings                    @measureAgainstSideBearings
 
         ---
 
@@ -69,11 +69,11 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
                 titleColumnWidth=125,
                 itemColumnWidth=265
             ),
-            measureAgainsComponents=dict(
-                value=internalGetDefault("measureAgainsComponents")
+            measureAgainstComponents=dict(
+                value=internalGetDefault("measureAgainstComponents")
             ),
-            measureAgainsSideBearings=dict(
-                value=internalGetDefault("measureAgainsSideBearings")
+            measureAgainstSideBearings=dict(
+                value=internalGetDefault("measureAgainstSideBearings")
             ),
             triggerCharacter=dict(
                 width=20,

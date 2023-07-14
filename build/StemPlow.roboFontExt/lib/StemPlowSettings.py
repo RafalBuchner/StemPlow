@@ -9,8 +9,8 @@ from StemPlowSubscriber import (
 )
 
 # print(extensionID,
-# internalGetDefault("measureAgainsComponents"),
-# internalGetDefault("measureAgainsSideBearings"),
+# internalGetDefault("measureAgainstComponents"),
+# internalGetDefault("measureAgainstSideBearings"),
 # internalGetDefault("triggerCharacter"),
 # internalGetDefault("measurementTextSize"),
 # internalGetDefault("textColor"),
@@ -27,10 +27,10 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         = TwoColumnForm
 
         : Measure:
-        [ ] against Components                      @measureAgainsComponents
+        [ ] against Components                      @measureAgainstComponents
         :
         :
-        [ ] against SideBearings                    @measureAgainsSideBearings
+        [ ] against SideBearings                    @measureAgainstSideBearings
         :
         :
         [ ] always                                  @measureAlways
@@ -74,11 +74,11 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
                 titleColumnWidth=125,
                 itemColumnWidth=265
             ),
-            measureAgainsComponents=dict(
-                value=internalGetDefault("measureAgainsComponents")
+            measureAgainstComponents=dict(
+                value=internalGetDefault("measureAgainstComponents")
             ),
-            measureAgainsSideBearings=dict(
-                value=internalGetDefault("measureAgainsSideBearings")
+            measureAgainstSideBearings=dict(
+                value=internalGetDefault("measureAgainstSideBearings")
             ),
             measureAlways=dict(
                 value=internalGetDefault("measureAlways")
@@ -137,7 +137,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
     def started(self):
         self.w.open()
 
-    def measureAgainsComponentsCallback(self, sender):
+    def measureAgainstComponentsCallback(self, sender):
         self.mainCallback(sender)
 
     def measureAlwaysCallback(self, sender):
@@ -146,7 +146,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
     def useShortcutToMoveWhileAlwaysCallback(self, sender):
         self.mainCallback(sender)
 
-    def measureAgainsSideBearingsCallback(self, sender):
+    def measureAgainstSideBearingsCallback(self, sender):
         self.mainCallback(sender)
 
     def triggerCharacterCallback(self, sender):

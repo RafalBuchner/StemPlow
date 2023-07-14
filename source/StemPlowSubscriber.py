@@ -23,8 +23,8 @@ defaults = {
     extensionKeyStub + "measurementOvalSize": 6,
     extensionKeyStub + "measurementLineSize": 1,
     extensionKeyStub + "measurementTextSize": 10,
-    extensionKeyStub + "measureAgainsComponents": True,
-    extensionKeyStub + "measureAgainsSideBearings": True,
+    extensionKeyStub + "measureAgainstComponents": True,
+    extensionKeyStub + "measureAgainstSideBearings": True,
 }
 
 registerExtensionDefaults(defaults)
@@ -96,8 +96,8 @@ class StemPlow(subscriber.Subscriber):
         # load
 
         self.triggerCharacter = internalGetDefault("triggerCharacter")
-        self.measureAgainsComponents = internalGetDefault("measureAgainsComponents")
-        self.measureAgainsSideBearings = internalGetDefault("measureAgainsSideBearings")
+        self.measureAgainstComponents = internalGetDefault("measureAgainstComponents")
+        self.measureAgainstSideBearings = internalGetDefault("measureAgainstSideBearings")
         self.measurementOvalSize = internalGetDefault("measurementOvalSize")
         measurementLineSize = internalGetDefault("measurementLineSize")
         textSize = internalGetDefault("measurementTextSize")
@@ -378,8 +378,8 @@ class StemPlow(subscriber.Subscriber):
         thicknessValue2 = 0
 
         # if StemMath.lenghtAB(position, closestPointOnPath) < 77:
-        intersectionAB1 = tools.IntersectGlyphWithLine(glyph, guideline1, canHaveComponent=self.measureAgainsComponents, addSideBearings=self.measureAgainsSideBearings)
-        intersectionAB2 = tools.IntersectGlyphWithLine(glyph, guideline2, canHaveComponent=self.measureAgainsComponents, addSideBearings=self.measureAgainsSideBearings)
+        intersectionAB1 = tools.IntersectGlyphWithLine(glyph, guideline1, canHaveComponent=self.measureAgainstComponents, addSideBearings=self.measureAgainstSideBearings)
+        intersectionAB2 = tools.IntersectGlyphWithLine(glyph, guideline2, canHaveComponent=self.measureAgainstComponents, addSideBearings=self.measureAgainstSideBearings)
 
         # system of if-statemens to hack the iteration through nearestPoints = nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
         if len(intersectionAB1) != 0:
