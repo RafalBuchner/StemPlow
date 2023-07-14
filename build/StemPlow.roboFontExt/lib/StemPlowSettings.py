@@ -31,7 +31,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         :
         [ ] against SideBearings                    @measureAgainsSideBearings
         :
-        [ ] until you click                         @measureUntilYouClick
+        [ ] always                                  @measureAlways
 
         ---
 
@@ -77,8 +77,8 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
             measureAgainsSideBearings=dict(
                 value=internalGetDefault("measureAgainsSideBearings")
             ),
-            measureUntilYouClick=dict(
-                value=internalGetDefault("measureUntilYouClick")
+            measureAlways=dict(
+                value=internalGetDefault("measureAlways")
             ),
             triggerCharacter=dict(
                 width=20,
@@ -134,7 +134,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
     def measureAgainsComponentsCallback(self, sender):
         self.mainCallback(sender)
 
-    def measureUntilYouClickCallback(self, sender):
+    def measureAlwaysCallback(self, sender):
         self.mainCallback(sender)
 
     def measureAgainsSideBearingsCallback(self, sender):
