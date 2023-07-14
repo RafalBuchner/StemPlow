@@ -26,6 +26,7 @@ defaults = {
     extensionKeyStub + "measureAgainsComponents": True,
     extensionKeyStub + "measureAgainsSideBearings": True,
     extensionKeyStub + "measureAlways": False,
+    extensionKeyStub + "useShortcutToMoveWhileAlways": True,
 }
 
 registerExtensionDefaults(defaults)
@@ -98,6 +99,7 @@ class StemPlow(subscriber.Subscriber):
 
         self.triggerCharacter = internalGetDefault("triggerCharacter")
         self.measureAlways = internalGetDefault("measureAlways")
+        self.useShortcutToMoveWhileAlways = internalGetDefault("useShortcutToMoveWhileAlways")
         self.measureAgainsComponents = internalGetDefault("measureAgainsComponents")
         self.measureAgainsSideBearings = internalGetDefault("measureAgainsSideBearings")
         self.measurementOvalSize = internalGetDefault("measurementOvalSize")
@@ -132,7 +134,6 @@ class StemPlow(subscriber.Subscriber):
         # if self.measureAlways:
         #     self.wantsMeasurements = True
         #     self.showLayers()
-        #     print(self.showMeasurements, self.wantsMeasurements)
 
     def destroy(self):
         self.backgroundContainer.clearSublayers()
@@ -213,6 +214,11 @@ class StemPlow(subscriber.Subscriber):
 
         self.updateText()
         self.updateLinesAndOvals()
+
+    def glyphEditorWillOpen(self, info):
+        if self.measureAlways:
+            self.wantsMeasurements = True
+            self.showLayers()
 
     def glyphEditorWantsContextualMenuItems(self, info):
         def _stemPlowGuide( sender):

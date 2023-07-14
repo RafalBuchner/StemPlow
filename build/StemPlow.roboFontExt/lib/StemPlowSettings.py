@@ -29,9 +29,12 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         : Measure:
         [ ] against Components                      @measureAgainsComponents
         :
+        :
         [ ] against SideBearings                    @measureAgainsSideBearings
         :
+        :
         [ ] always                                  @measureAlways
+        [ ] use shortcut to move line               @useShortcutToMoveWhileAlways
 
         ---
 
@@ -79,6 +82,9 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
             ),
             measureAlways=dict(
                 value=internalGetDefault("measureAlways")
+            ),
+            useShortcutToMoveWhileAlways=dict(
+                value=internalGetDefault("useShortcutToMoveWhileAlways")
             ),
             triggerCharacter=dict(
                 width=20,
@@ -135,6 +141,9 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         self.mainCallback(sender)
 
     def measureAlwaysCallback(self, sender):
+        self.mainCallback(sender)
+
+    def useShortcutToMoveWhileAlwaysCallback(self, sender):
         self.mainCallback(sender)
 
     def measureAgainsSideBearingsCallback(self, sender):
