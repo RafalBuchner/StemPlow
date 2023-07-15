@@ -17,7 +17,9 @@ def getClosestInfo(cursorPoint, segment, *points):
         cursorPoint, segment, *points
     )
     closestPoint = calcSeg(0.5, *curve)
-    return (closestPoint, info)
+    contour_index, segment_index, segPoints, old_t = info
+    t = old_t * 0.5
+    return closestPoint, contour_index, segment_index, segPoints, t
 
 
 def closestPointAndT_binaryIndexSearch_withSegments(pointOffCurve, segment, *segPoints):
@@ -32,6 +34,7 @@ def closestPointAndT_binaryIndexSearch_withSegments(pointOffCurve, segment, *seg
     found = False
     count = 0
     points = segPoints
+    old_t = 1
     while found == False:
         if count == 10:
             break
@@ -49,15 +52,16 @@ def closestPointAndT_binaryIndexSearch_withSegments(pointOffCurve, segment, *seg
                 minimalDist = distance
                 t = n[1]
 
-        points1, points2 = splitSegAtT(segment.type, points, 0.5)
+        old_t, segments = splitSegAtTAndGetNewT(old_t, segment.type, points, 0.5)
 
+        points1, points2 = segments
         if t >= 0.5:
             points = points2
 
         else:
             points = points1
 
-    return (points, (segment.contour.index, segment.index, segPoints))
+    return (points, (segment.contour.index, segment.index, segPoints, old_t))
 
 
 def closestPointAndT_binaryIndexSearch(pointOffCurve, segType, *points):
@@ -197,6 +201,10 @@ def bs(searchFor, array):
 
     raise AssertionError("The value wasn't found in the array")
 
+
+def splitSegAtTAndGetNewT(oldT, segType, points, *t):
+    newT = t[0] * oldT
+    return newT, splitSegAtT(segType, points, *t)
 
 def splitSegAtT(segType, points, *t):
     if len(points) == 2:

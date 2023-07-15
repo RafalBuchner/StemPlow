@@ -187,12 +187,19 @@ class StemPlow(subscriber.Subscriber):
 
 
     def glyphEditorDidKeyUp(self, info):
+        print("> key up up")
         if not self.measureAlways:
             self.hideLayers()
             self.wantsMeasurements = False
+        else:
+            # getting glyph and current mouse location
+            glyph = info["glyph"]
+            glyphView = info["glyphEditor"].getGlyphView()
+            locationInView = glyphView._getMousePosition()
+            cursorPosition = glyphView._converPointFromViewToGlyphSpace(locationInView)
+            cursorPosition = (cursorPosition.x, cursorPosition.y)
 
-    # def glyphEditorDidRightMouseDown(self, info):
-    #     self.position = tuple(info["locationInGlyph"])
+            self.stemPlowRuler.anchorRuler(cursorPosition, glyph)
 
     def glyphEditorDidMouseDown(self, info):
         if not self.measureAlways:
@@ -226,62 +233,7 @@ class StemPlow(subscriber.Subscriber):
 
     def glyphEditorWantsContextualMenuItems(self, info):
         def _stemPlowGuide( sender):
-            glyph = info["glyph"]
-
-            if len(glyph.contours) + len(glyph.components) == 0:
-                return
-            # window = self.getGlyphEditor()
-            # editor = window.getGlyphView()
-            # print(window, editor)
-            # cursorPosition = editor._getMousePosition()
-            cursorPosition = self.position
-            
-            closestPointsRef = []
-
-            if cursorPosition is None:
-                return
-
-            for contour in glyph.contours:
-                segs = contour.segments
-
-                for seg in segs:
-                    segIndex = segs.index(seg)
-
-                    # rebuilding segment into system 2 points for line and 4 for curve (StemMath needs it):
-                    points = [segs[segIndex-1][-1]] # 1adding last point from previous segment
-                    for point in seg.points:
-                        points.append(point) # 2 adding rest of points of the segment
-
-                    if len(points) == 2:
-                        P1,P2=points
-                        P1,P2=((P1.x,P1.y),(P2.x,P2.y))
-                        l1,l2 = StemMath.stemThicnkessGuidelines(cursorPosition,seg.type,P1,P2)
-
-
-
-                    if len(points) == 4:
-                        P1,P2,P3,P4=points
-                        P1,P2,P3,P4=((P1.x,P1.y),(P2.x,P2.y),(P3.x,P3.y),(P4.x,P4.y))
-                        l1, l2 = StemMath.stemThicnkessGuidelines(cursorPosition, seg.type, P1,P2,P3,P4)
-
-                    closestPoint = l1[1]
-                    closestPointsRef.append((closestPoint,l1,l2))
-
-            distances = []
-
-            for ref in closestPointsRef:
-                point = ref[0]
-                distance = StemMath.lenghtAB(cursorPosition,point)
-                distances.append(distance)
-
-            indexOfClosestPoint = distances.index(min(distances))
-            closestPointOnPathRef = closestPointsRef[indexOfClosestPoint]
-            closestPointOnPath, guideline1, guideline2 = closestPointOnPathRef
-
-            angle1 = StemMath.angle(*guideline1)
-            posX,posY = cursorPosition
-            glyph.appendGuideline(closestPointOnPath,angle1)
-            glyph.guidelines[-1].showMeasurements = 1
+            print("Create Stem Plow Guide – NotImplemented")
 
         myMenuItems = [
             ("Create Stem Plow Guide", _stemPlowGuide)
@@ -333,6 +285,68 @@ class StemPlowRuler:
     curr_t_value = 0
     curr_path_idx = 0
     curr_segment_idx = 0
+
+    def anchorRuler(self, cursorPosition, glyph):
+        closestPoint, contour_index, segment_index, t = self.calculateDetailsForNearestPointOnCurve(cursorPosition, glyph)
+        print(">>>", closestPoint, contour_index, segment_index, t)
+
+    def calculateDetailsForNearestPointOnCurve(self, cursorPosition, glyph):
+        # slow, only used for anchoring
+        closestPointsRef = []
+
+        if cursorPosition != (-3000, -3000):  # if anchor exist
+            for contour in glyph.contours:
+                segs = contour.segments
+
+                for segIndex, seg in enumerate(segs):
+
+                    # rebuilding segment into system 2 points for line and 4 for curve (StemMath needs it):
+                    points = [
+                        segs[segIndex - 1][-1]
+                    ]  # 1adding last point from previous segment
+
+                    for point in seg.points:
+                        points.append(point)  # 2 adding rest of points of the segment
+
+                    if len(points) == 2:
+                        P1, P2 = points
+
+                        # making sure that extension doesn't take open segment of the contour into count
+                        if P1.type == "line" and P2.type == "move":
+                            continue
+
+                        P1, P2 = ((P1.x, P1.y), (P2.x, P2.y))
+                        closestPoint, contour_index, segment_index, _, t = StemMath.getClosestInfo(
+                            cursorPosition, seg, P1, P2
+                        )
+
+                    if len(points) == 4:
+                        P1, P2, P3, P4 = points
+                        P1, P2, P3, P4 = (
+                            (P1.x, P1.y),
+                            (P2.x, P2.y),
+                            (P3.x, P3.y),
+                            (P4.x, P4.y),
+                        )
+                        closestPoint, contour_index, segment_index, _, t = StemMath.getClosestInfo(
+                            cursorPosition, seg, P1, P2, P3, P4
+                        )
+                        #### TODO: Jesli seg.type == qcurve, to przerob to na StemMath.stemThicnkessGuidelines(cursorPosition,seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
+
+                    closestPointsRef.append((closestPoint, contour_index, segment_index, t))
+
+            distances = []
+
+            for ref in closestPointsRef:
+                point = ref[0]
+                distance = StemMath.lenghtAB(cursorPosition, point)
+                distances.append(distance)
+
+            indexOfClosestPoint = distances.index(min(distances))
+            closestPointOnPathRef = closestPointsRef[indexOfClosestPoint]
+            closestPoint, contour_index, segment_index, t = closestPointOnPathRef
+
+            return closestPoint, contour_index, segment_index, t
 
     def loadDefaults(self):
         self.measureAgainstComponents = internalGetDefault("measureAgainstComponents")
@@ -402,9 +416,6 @@ class StemPlowRuler:
     def getThicknessData(self, position, glyph):
         if len(glyph.contours) == 0:
             return
-
-        # position = (point.x, point.y)
-
 
         guideline1, guideline2, closestPointOnPath = self.getGuidesAndClosestPoint(
             position, glyph
