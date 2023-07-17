@@ -119,7 +119,7 @@ class StemPlow(subscriber.Subscriber):
             backgroundColor=mainColor,
             fillColor=textColor,
             padding=(6, 1),
-            cornerRadius=5,
+            cornerRadius=textSize*0.8,
             horizontalAlignment="center",
             verticalAlignment="center",
             pointSize=textSize,
@@ -184,7 +184,27 @@ class StemPlow(subscriber.Subscriber):
             self.showLayers()
         if self.measureAlways:
             self.wantsMeasurements = True
+            if self.useShortcutToMoveWhileAlways:
+                self.stemPlowRuler.unanchorRuler(info["glyph"])
 
+
+
+    def glyphEditorDidMouseDrag(self, info):
+        if self.stemPlowRuler.anchored:
+            glyph = info["glyph"]
+
+            (
+                self.textBoxCenter1,
+                self.measurementValue1,
+                self.nearestP1,
+                self.textBoxCenter2,
+                self.measurementValue2,
+                self.nearestP2,
+                self.closestPointOnPath
+            ) = self.stemPlowRuler.getThicknessData(None, glyph, self.stemPlowRuler.getGuidesAndAnchoredPoint)
+
+            self.updateText()
+            self.updateLinesAndOvals()
 
     def glyphEditorDidKeyUp(self, info):
         print("> key up up")
@@ -221,7 +241,7 @@ class StemPlow(subscriber.Subscriber):
             self.measurementValue2,
             self.nearestP2,
             self.closestPointOnPath
-        ) = self.stemPlowRuler.getThicknessData(cursorPosition, glyph)
+        ) = self.stemPlowRuler.getThicknessData(cursorPosition, glyph, self.stemPlowRuler.getGuidesAndClosestPoint)
 
         self.updateText()
         self.updateLinesAndOvals()
@@ -282,13 +302,74 @@ class StemPlow(subscriber.Subscriber):
     
 
 class StemPlowRuler:
+    keyId = extensionKeyStub + "StemPlowRuler"
     curr_t_value = 0
     curr_path_idx = 0
     curr_segment_idx = 0
+    anchored = False
 
     def anchorRuler(self, cursorPosition, glyph):
-        closestPoint, contour_index, segment_index, t = self.calculateDetailsForNearestPointOnCurve(cursorPosition, glyph)
-        print(">>>", closestPoint, contour_index, segment_index, t)
+        _, contour_index, segment_index, anchor_t = self.calculateDetailsForNearestPointOnCurve(cursorPosition, glyph)
+
+        glyph.lib[self.keyId] = dict(
+                contour_index=contour_index,
+                segment_index=segment_index,
+                anchor_t=anchor_t
+            )
+        self.anchored = True
+
+    def unanchorRuler(self, glyph):
+        del(glyph.lib[self.keyId])
+        self.anchored = False
+
+    def getGuidesAndAnchoredPoint(self, position, glyph):
+        # position has to be there, but it will be set to None
+        assert position is None, f"something wrong with placement of getGuidesAndAnchoredPoint method (position is {position})"
+        if not self.keyId in glyph.lib.keys():
+            self.anchored = False
+            return
+
+        contour_index = glyph.lib.get(contour_index)
+        segment_index = glyph.lib.get(segment_index)
+        anchor_t = glyph.lib.get(anchor_t)
+        contour = glyph.contours[contour_index]
+        segs = contour.segments
+        seg = segs[segment_index]
+        # rebuilding segment into system 2 points for line and 4 for curve (StemMath needs it):
+        points = [
+            segs[segIndex - 1][-1]
+        ]  # 1adding last point from previous segment
+
+        for point in seg.points:
+            points.append(point)  # 2 adding rest of points of the segment
+
+        if len(points) == 2:
+            P1, P2 = points
+
+            # # making sure that extension doesn't take open segment of the contour into count
+            # if P1.type == "line" and P2.type == "move":
+            #     continue
+
+            P1, P2 = ((P1.x, P1.y), (P2.x, P2.y))
+            guideline1, guideline2 = StemMath.calculateGuidesBasedOnT(
+                anchor_t, seg.type, P1, P2
+            )
+
+        if len(points) == 4:
+            P1, P2, P3, P4 = points
+            P1, P2, P3, P4 = (
+                (P1.x, P1.y),
+                (P2.x, P2.y),
+                (P3.x, P3.y),
+                (P4.x, P4.y),
+            )
+            guideline1, guideline2 = StemMath.calculateGuidesBasedOnT(
+                anchor_t, seg.type, P1, P2, P3, P4
+            )
+        onCurvePoint = guideline1[1]
+
+        return guideline1, guideline2, onCurvePoint
+
 
     def calculateDetailsForNearestPointOnCurve(self, cursorPosition, glyph):
         # slow, only used for anchoring
@@ -413,11 +494,14 @@ class StemPlowRuler:
 
             return guideline1, guideline2, closestPointOnPath
 
-    def getThicknessData(self, position, glyph):
+    def getThicknessData(self, position, glyph, method):
         if len(glyph.contours) == 0:
             return
 
-        guideline1, guideline2, closestPointOnPath = self.getGuidesAndClosestPoint(
+        # guideline1, guideline2, closestPointOnPath = self.getGuidesAndClosestPoint(
+        #     position, glyph
+        # )
+        guideline1, guideline2, closestPointOnPath = method(
             position, glyph
         )
 

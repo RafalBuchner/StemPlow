@@ -93,13 +93,11 @@ def closestPointAndT_binaryIndexSearch(pointOffCurve, segType, *points):
         if count == 10:
             break
         count += 1
-        # print(f"closestPointAndT_binaryIndexSearch\nlen{len(points)}\npoints{points}")###TESt
         LUT = getLut(segType, curveDiv, *points)
         minimalDist = 20000
 
         for i in range(curveDiv + 1):
             n = (i, i / curveDiv)
-            # print(f"\n\n\nTEST::::::\n {LUT}\n\n\n")
             distance = lenghtAB(pointOffCurve, LUT[n])
 
             if distance < minimalDist:
@@ -116,19 +114,15 @@ def closestPointAndT_binaryIndexSearch(pointOffCurve, segType, *points):
 
     return points
 
-
-def stemThicnkessGuidelines(cursorPoint, segType, *points):
+def calculateGuidesBasedOnT(t, segType, *points):
     """
     calculate guidelines for stem thickness
     returnt two lines, every line has two points
     every point is represented as a touple with x, y values
     """
-    # print(f"stemThicnkessGuidelines\nlen{len(points)}\npoints{points}")###TESt
-    # print('>>>',cursorPoint,segType, *points)
-    curve = closestPointAndT_binaryIndexSearch(cursorPoint, segType, *points)
-    closestPointx, closestPointy = calcSeg(0.5, *curve)
+    closestPointx, closestPointy = calcSeg(t, *points)
 
-    guide1, guide2 = getPerpedicularLineToTangent(segType, 0.5, *curve)
+    guide1, guide2 = getPerpedicularLineToTangent(segType, t, *points)
     guide1A, guide1B = guide1
     guide2A, guide2B = guide2
 
@@ -150,6 +144,16 @@ def stemThicnkessGuidelines(cursorPoint, segType, *points):
         (guide2Ax, guide2Ay),
         (guide2Bx, guide2By),
     )
+
+def stemThicnkessGuidelines(cursorPoint, segType, *points):
+    """
+    calculate guidelines for stem thickness
+    returnt two lines, every line has two points
+    every point is represented as a touple with x, y values
+    """
+    curveChopped = closestPointAndT_binaryIndexSearch(cursorPoint, segType, *points)
+
+    return calculateGuidesBasedOnT(0.5, segType, *curveChopped)
 
 
 def getLut(segType, accuracy=12, *points):
