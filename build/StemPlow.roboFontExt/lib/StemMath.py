@@ -17,16 +17,12 @@ def getClosestInfo(cursorPoint, segment, *points):
         cursorPoint, segment, *points
     )
     closestPoint = calcSeg(0.5, *curve)
-    contour_index, segment_index, segPoints, old_t = info
-    t = old_t * 0.5
-    return closestPoint, contour_index, segment_index, segPoints, t
+    contour_index, segment_index, segPoints, curr_t = info
+    return closestPoint, contour_index, segment_index, segPoints, curr_t
 
 
 def closestPointAndT_binaryIndexSearch_withSegments(pointOffCurve, segment, *segPoints):
-    """Returns returns the curve, which is segment cutted from the given curve.
-    it returns more info on curve than method closestPointAndT_binaryIndexSearch.
-    Therefore it is heavier
-    """
+
     curveDiv = 12
 
     lowerBound = 0
@@ -34,34 +30,49 @@ def closestPointAndT_binaryIndexSearch_withSegments(pointOffCurve, segment, *seg
     found = False
     count = 0
     points = segPoints
-    old_t = 1
+    curr_left_t = 0
+    curr_mid_t = 0.5
+    next_mid_t = curr_mid_t
+    curr_right_t = 1
     while found == False:
-        if count == 10:
+        
+        if count == 12:
             break
         count += 1
-        # print(f"closestPointAndT_binaryIndexSearch\nlen{len(points)}\npoints{points}")###TESt
         LUT = getLut(segment.type, curveDiv, *points)
         minimalDist = 20000
 
         for i in range(curveDiv + 1):
             n = (i, i / curveDiv)
-            # print(f"\n\n\nTEST::::::\n {LUT}\n\n\n")
             distance = lenghtAB(pointOffCurve, LUT[n])
 
             if distance < minimalDist:
                 minimalDist = distance
                 t = n[1]
 
-        old_t, segments = splitSegAtTAndGetNewT(old_t, segment.type, points, 0.5)
+        
+        points1, points2 = splitSegAtT(segment.type, points, 0.5)
 
-        points1, points2 = segments
         if t >= 0.5:
+            # right side choosen
             points = points2
-
+            next_left_t = curr_mid_t
+            next_right_t = curr_right_t
+            next_mid_t = (next_right_t - next_left_t) * 0.5 + curr_mid_t
         else:
+            # left side choosen
             points = points1
+            next_left_t = curr_left_t
+            next_right_t = curr_mid_t
+            next_mid_t = interpolation(next_right_t, next_left_t, 0.5)
+        
+        # combine it later with previous if statement
+        # now it is here just because of drawbot functions
+        curr_left_t = next_left_t
+        curr_mid_t = next_mid_t
+        curr_right_t = next_right_t
+    return (points, (segment.contour.index, segment.index, segPoints, curr_mid_t))
 
-    return (points, (segment.contour.index, segment.index, segPoints, old_t))
 
 
 def closestPointAndT_binaryIndexSearch(pointOffCurve, segType, *points):
@@ -201,10 +212,10 @@ def bs(searchFor, array):
 
     raise AssertionError("The value wasn't found in the array")
 
-
-def splitSegAtTAndGetNewT(oldT, segType, points, *t):
-    newT = t[0] * oldT
-    return newT, splitSegAtT(segType, points, *t)
+# TODO: DEL
+# def splitSegAtTAndGetNewT(oldT, segType, points, *t):
+#     newT = t[0] * oldT
+#     return newT, splitSegAtT(segType, points, *t)
 
 def splitSegAtT(segType, points, *t):
     if len(points) == 2:
