@@ -31,4 +31,4 @@ You can edit its shortcut, behaviour and appearance by going to
 
 ---
 
-I've learned a lot about Subscribers and Merz while making this version of StemPlow. I wouldn't be able to do it, if not for @typesupply's  laser measure extension [Laser Measure extension](https://github.com/typesupply/lasermeasure/). I've based a lot of math based on awesome [`Primer on Bézier curves`](https://pomax.github.io/bezierinfo/).
+I've learned a lot about Subscribers and Merz while making this version of StemPlow. I wouldn't be able to do it, if not for @typesupply's  laser measure extension [`Laser Measure`](https://github.com/typesupply/lasermeasure/) extension. I've based a lot of math based on awesome [`Primer on Bézier curves`](https://pomax.github.io/bezierinfo/).
