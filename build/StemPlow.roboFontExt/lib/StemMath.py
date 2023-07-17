@@ -161,9 +161,6 @@ def getLut(segType, accuracy=12, *points):
     if getT=True then returns table with points and their factors"""
     lut_table = {}
 
-    # print(f"getLut\nlen{len(points)}\npoints{points}")###TESt
-
-    # print('otherCurve') ###TEST
     for i in range(accuracy + 1):
         t = i / accuracy
 
@@ -185,7 +182,7 @@ def getLut(segType, accuracy=12, *points):
     #         t=i/accuracy
     #         calc = calcQbezier(t,*points)
     #         lut_table[(i,t)] = calc
-    # print(lut_table) ###TEST
+
     return lut_table
 
 

@@ -207,10 +207,9 @@ class StemPlow(subscriber.Subscriber):
             self.updateLinesAndOvals()
 
     def glyphEditorDidKeyUp(self, info):
-        print("> key up up")
         if not self.measureAlways:
             self.hideLayers()
-            self.wantsMeasurements = False
+            # self.wantsMeasurements = False
         else:
             # getting glyph and current mouse location
             glyph = info["glyph"]
@@ -218,8 +217,8 @@ class StemPlow(subscriber.Subscriber):
             locationInView = glyphView._getMousePosition()
             cursorPosition = glyphView._converPointFromViewToGlyphSpace(locationInView)
             cursorPosition = (cursorPosition.x, cursorPosition.y)
-
             self.stemPlowRuler.anchorRuler(cursorPosition, glyph)
+        self.wantsMeasurements = False
 
     def glyphEditorDidMouseDown(self, info):
         if not self.measureAlways:
@@ -228,6 +227,7 @@ class StemPlow(subscriber.Subscriber):
     def glyphEditorDidMouseMove(self, info):
         if not self.wantsMeasurements:
             return
+
         glyph = info["glyph"]
         if len(glyph.contours) + len(glyph.components) == 0:
                 return
@@ -319,7 +319,8 @@ class StemPlowRuler:
         self.anchored = True
 
     def unanchorRuler(self, glyph):
-        del(glyph.lib[self.keyId])
+        if self.keyId in glyph.lib.keys():
+            del(glyph.lib[self.keyId])
         self.anchored = False
 
     def getGuidesAndAnchoredPoint(self, position, glyph):
@@ -328,16 +329,15 @@ class StemPlowRuler:
         if not self.keyId in glyph.lib.keys():
             self.anchored = False
             return
-
-        contour_index = glyph.lib.get(contour_index)
-        segment_index = glyph.lib.get(segment_index)
-        anchor_t = glyph.lib.get(anchor_t)
+        contour_index = glyph.lib[self.keyId].get("contour_index")
+        segment_index = glyph.lib[self.keyId].get("segment_index")
+        anchor_t = glyph.lib[self.keyId].get("anchor_t")
         contour = glyph.contours[contour_index]
         segs = contour.segments
         seg = segs[segment_index]
         # rebuilding segment into system 2 points for line and 4 for curve (StemMath needs it):
         points = [
-            segs[segIndex - 1][-1]
+            segs[segment_index - 1][-1]
         ]  # 1adding last point from previous segment
 
         for point in seg.points:
