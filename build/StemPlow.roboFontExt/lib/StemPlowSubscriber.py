@@ -182,31 +182,34 @@ class StemPlow(subscriber.Subscriber):
         else:
             self.wantsMeasurements = True
             self.showLayers()
-        if self.measureAlways:
-            self.wantsMeasurements = True
-            if self.useShortcutToMoveWhileAlways:
-                self.stemPlowRuler.unanchorRuler(info["glyph"])
+            
+        # if self.measureAlways:
+        #     self.wantsMeasurements = True
+            # if self.useShortcutToMoveWhileAlways:
+            #     self.stemPlowRuler.unanchorRuler(info["glyph"])
 
 
 
     def glyphEditorDidMouseDrag(self, info):
-        if self.stemPlowRuler.anchored:
-            glyph = info["glyph"]
+        if not self.wantsMeasurements and not self.stemPlowRuler.anchored:
+            return
+        glyph = info["glyph"]
 
-            (
-                self.textBoxCenter1,
-                self.measurementValue1,
-                self.nearestP1,
-                self.textBoxCenter2,
-                self.measurementValue2,
-                self.nearestP2,
-                self.closestPointOnPath
-            ) = self.stemPlowRuler.getThicknessData(None, glyph, self.stemPlowRuler.getGuidesAndAnchoredPoint)
+        (
+            self.textBoxCenter1,
+            self.measurementValue1,
+            self.nearestP1,
+            self.textBoxCenter2,
+            self.measurementValue2,
+            self.nearestP2,
+            self.closestPointOnPath
+        ) = self.stemPlowRuler.getThicknessData(None, glyph, self.stemPlowRuler.getGuidesAndAnchoredPoint)
 
-            self.updateText()
-            self.updateLinesAndOvals()
+        self.updateText()
+        self.updateLinesAndOvals()
 
     def glyphEditorDidKeyUp(self, info):
+        deviceState = info["deviceState"]
         if not self.measureAlways:
             self.hideLayers()
             # self.wantsMeasurements = False
@@ -217,7 +220,9 @@ class StemPlow(subscriber.Subscriber):
             locationInView = glyphView._getMousePosition()
             cursorPosition = glyphView._converPointFromViewToGlyphSpace(locationInView)
             cursorPosition = (cursorPosition.x, cursorPosition.y)
-            self.stemPlowRuler.anchorRuler(cursorPosition, glyph)
+            if self.useShortcutToMoveWhileAlways \
+                    and deviceState["keyDownWithoutModifiers"] != self.triggerCharacter:
+                self.stemPlowRuler.anchorRuler(cursorPosition, glyph)
         self.wantsMeasurements = False
 
     def glyphEditorDidMouseDown(self, info):
