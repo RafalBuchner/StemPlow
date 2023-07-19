@@ -75,18 +75,18 @@ def getCurrentPosition(info):
 class StemPlowSubscriber(subscriber.Subscriber):
     
     debug = __DEBUG__
-    # wantsMeasurements = False
+    wantsMeasurements = False
     
 
     
-    @property
-    def wantsMeasurements(self):
-        return self._wantsMeasurements
+    # @property
+    # def wantsMeasurements(self):
+    #     return self._wantsMeasurements
 
-    @wantsMeasurements.setter
-    def wantsMeasurements(self, value):
-        debugFunctionNestingChain(f"wantsMeasurements = {value}")
-        self._wantsMeasurements = value
+    # @wantsMeasurements.setter
+    # def wantsMeasurements(self, value):
+    #     debugFunctionNestingChain(f"wantsMeasurements = {value}")
+    #     self._wantsMeasurements = value
 
     @property
     def performAnchoring(self):
@@ -94,7 +94,6 @@ class StemPlowSubscriber(subscriber.Subscriber):
     
 
     def build(self):
-        self.wantsMeasurements = False
         self.stemPlowRuler = StemPlowRuler()
 
         window = self.getGlyphEditor()
@@ -183,6 +182,9 @@ class StemPlowSubscriber(subscriber.Subscriber):
         else:
             self.hideLayers()
 
+        if self.performAnchor:
+            self.wantsMeasurements = False
+
 
     def destroy(self):
         self.backgroundContainer.clearSublayers()
@@ -248,7 +250,6 @@ class StemPlowSubscriber(subscriber.Subscriber):
         if not self.measureAlways:
             self.hideLayers()
         else:
-            print("glyphEditorDidKeyUp trigger")
             # getting glyph and current mouse location
             if self.useShortcutToMoveWhileAlways and isTriggerCharPressed and not self.stemPlowRuler.anchored:
                 self.stemPlowRuler.anchorRuler( info)
@@ -343,8 +344,8 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.oval_CLayer.setPosition((self.nearestP2))
         self.oval_AnchorIndicatorLayer.setPosition((self.closestPointOnPath))
 
-        # if self.useShortcutToMoveWhileAlways and self.stemPlowRuler.anchored:
-        if self.performAnchoring:
+        # if self.performAnchoring:
+        if self.useShortcutToMoveWhileAlways and self.stemPlowRuler.anchored:
             self.oval_AnchorIndicatorLayer.setVisible(True)
         else:
             self.oval_AnchorIndicatorLayer.setVisible(False)
