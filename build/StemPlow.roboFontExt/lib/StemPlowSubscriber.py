@@ -14,16 +14,16 @@ from mojo.extensions import (
 __DEBUG__ = True
 if __DEBUG__:
     import traceback
-def debugFunctionNestingChain():
+def debugFunctionNestingChain(additionalData=""):
     if __DEBUG__:
-        limit = 20
+        limit = 30
+        stack = traceback.extract_stack(limit=limit)
         print("="*50)
-        print(f"depth: {len(traceback.extract_stack(limit=limit))}")
-        for i, f in enumerate(traceback.extract_stack(limit=limit)):
-            indicator = ""
-            if i != 0:
-                indicator = "└╴"
-            print(f"{' '+'  '*i}{f.name} at {f.lineno:03d} ({f.line})")
+        print(f"depth: {len(stack)}")
+        for i, f in enumerate(stack):
+            if i == len(stack)-1: 
+                break
+            print(f"{' '+'  '*i}{f.name} at {f.lineno:03d} ({additionalData})")
         print()
 ## DEBUGGING SETTINGS:
 
@@ -75,9 +75,26 @@ def getCurrentPosition(info):
 class StemPlowSubscriber(subscriber.Subscriber):
     
     debug = __DEBUG__
-    wantsMeasurements = False
+    # wantsMeasurements = False
     
+
+    
+    @property
+    def wantsMeasurements(self):
+        return self._wantsMeasurements
+
+    @wantsMeasurements.setter
+    def wantsMeasurements(self, value):
+        debugFunctionNestingChain(f"wantsMeasurements = {value}")
+        self._wantsMeasurements = value
+
+    @property
+    def performAnchoring(self):
+        return self.useShortcutToMoveWhileAlways and self.measureAlways
+    
+
     def build(self):
+        self.wantsMeasurements = False
         self.stemPlowRuler = StemPlowRuler()
 
         window = self.getGlyphEditor()
@@ -126,9 +143,9 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.stemPlowRuler.loadDefaults()
 
         self.triggerCharacter = internalGetDefault("triggerCharacter")
-        self.measureAlways = internalGetDefault("measureAlways")
-        self.useShortcutToMoveWhileAlways = internalGetDefault("useShortcutToMoveWhileAlways")
-        self.measureAgainstComponents = internalGetDefault("measureAgainstComponents")
+        self.measureAlways = bool(internalGetDefault("measureAlways"))
+        self.useShortcutToMoveWhileAlways = bool(internalGetDefault("useShortcutToMoveWhileAlways"))
+        self.measureAgainstComponents = bool(internalGetDefault("measureAgainstComponents"))
         self.measurementOvalSize = internalGetDefault("measurementOvalSize")
         measurementLineSize = internalGetDefault("measurementLineSize")
         textSize = internalGetDefault("measurementTextSize")
@@ -159,6 +176,12 @@ class StemPlowSubscriber(subscriber.Subscriber):
             oval.setImageSettings(ovalAttributes)
         
         self.oval_AnchorIndicatorLayer.setImageSettings(dict(size=(self.measurementOvalSize+measurementLineSize*5,self.measurementOvalSize+measurementLineSize*5), fillColor=None,strokeColor=ovalColor, strokeWidth=measurementLineSize, name="oval"))
+
+        if self.measureAlways:
+            self.wantsMeasurements = True
+            self.showLayers()
+        else:
+            self.hideLayers()
 
 
     def destroy(self):
@@ -197,32 +220,27 @@ class StemPlowSubscriber(subscriber.Subscriber):
     position = None
 
     def glyphEditorDidSetGlyph(self, info):
-        if self.measureAlways and self.useShortcutToMoveWhileAlways: 
+        if self.performAnchoring: 
             self.stemPlowRuler.anchorRulerWithoutCursor(info)
             
     def glyphEditorDidKeyDown(self, info):
         isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
 
-        if isTriggerCharPressed and self.useShortcutToMoveWhileAlways and self.measureAlways:
-            print("always + trigger")
+        if isTriggerCharPressed and not self.measureAlways:
             self.wantsMeasurements = True
             self.showLayers()
-            if self.useShortcutToMoveWhileAlways:
+
+        elif not isTriggerCharPressed and not self.measureAlways:
+            self.wantsMeasurements = False
+
+        if self.performAnchoring:
+            if isTriggerCharPressed:
+                self.wantsMeasurements = True
+                self.showLayers()
                 self.stemPlowRuler.unanchorRuler(info)
-        else:
-            self.wantsMeasurements = False
+            else:
+                self.wantsMeasurements = False
 
-        if isTriggerCharPressed and not (self.useShortcutToMoveWhileAlways and self.measureAlways):
-            print("trigger")
-            self.wantsMeasurements = True
-            self.showLayers()
-        else:
-            self.wantsMeasurements = False
-
-        if not (isTriggerCharPressed and self.useShortcutToMoveWhileAlways) and self.measureAlways:
-            print("always")
-            self.wantsMeasurements = True
-            self.showLayers()
 
 
     def glyphEditorDidKeyUp(self, info):
@@ -230,16 +248,20 @@ class StemPlowSubscriber(subscriber.Subscriber):
         if not self.measureAlways:
             self.hideLayers()
         else:
+            print("glyphEditorDidKeyUp trigger")
             # getting glyph and current mouse location
             if self.useShortcutToMoveWhileAlways and isTriggerCharPressed and not self.stemPlowRuler.anchored:
                 self.stemPlowRuler.anchorRuler( info)
                 self.updateText()
                 self.updateLinesAndOvals()
 
-        self.wantsMeasurements = False
+        if self.performAnchoring:
+            self.wantsMeasurements = False
 
     def glyphEditorDidMouseDrag(self, info):
         # if not self.wantsMeasurements and not self.stemPlowRuler.anchored:
+        if not self.performAnchoring:
+            return
         if not self.stemPlowRuler.anchored:
             return
         glyph = info["glyph"]
@@ -321,7 +343,8 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.oval_CLayer.setPosition((self.nearestP2))
         self.oval_AnchorIndicatorLayer.setPosition((self.closestPointOnPath))
 
-        if self.useShortcutToMoveWhileAlways and self.stemPlowRuler.anchored:
+        # if self.useShortcutToMoveWhileAlways and self.stemPlowRuler.anchored:
+        if self.performAnchoring:
             self.oval_AnchorIndicatorLayer.setVisible(True)
         else:
             self.oval_AnchorIndicatorLayer.setVisible(False)
@@ -347,9 +370,6 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
 class StemPlowRuler:
     keyId = extensionKeyStub + "StemPlowRuler"
-    curr_t_value = 0
-    curr_path_idx = 0
-    curr_segment_idx = 0
     anchored = False
 
     # def __init__(self):
@@ -363,6 +383,8 @@ class StemPlowRuler:
     # def anchored(self, value):
     #     debugFunctionNestingChain()
     #     self._anchored = value
+    def clearAnchor(self):
+        self.anchored = None
 
     def anchorRulerWithoutCursor(self, info):
         glyph = info["glyph"]
@@ -508,7 +530,7 @@ class StemPlowRuler:
 
     def loadDefaults(self):
         self.measureAgainstComponents = internalGetDefault("measureAgainstComponents")
-        self.measureAgainstSideBearings = internalGetDefault("measureAgainstComponents")
+        self.measureAgainstSideBearings = internalGetDefault("measureAgainstSideBearings")
 
     def getGuidesAndClosestPoint(self, cursorPosition, glyph):
         """returns 2 intersection lists"""
