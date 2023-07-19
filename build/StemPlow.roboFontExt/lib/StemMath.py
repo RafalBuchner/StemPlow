@@ -18,6 +18,8 @@ def getClosestInfo(cursorPoint, segment, *points):
     )
     closestPoint = calcSeg(0.5, *curve)
     contour_index, segment_index, segPoints, curr_t = info
+    # print("getClosestInfo") # DEBUG ISSUE: tuple out of range
+    # print(f"contour_index {contour_index}, segment_index{segment_index}, curr_t{curr_t}")
     return closestPoint, contour_index, segment_index, segPoints, curr_t
 
 

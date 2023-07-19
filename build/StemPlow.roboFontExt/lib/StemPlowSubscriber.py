@@ -193,6 +193,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
     def glyphEditorDidKeyDown(self, info):
         deviceState = info["deviceState"]
+        # print(f'keyDown: {info["deviceState"]["keyDownWithoutModifiers"]} cmd: {info["deviceState"]["commandDown"]} shift: {info["deviceState"]["shiftDown"]} option: {info["deviceState"]["optionDown"]} control: {info["deviceState"]["controlDown"]}')
         isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
 
         if not (isTriggerCharPressed and self.measureAlways):
@@ -202,11 +203,6 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.showLayers()
             if self.useShortcutToMoveWhileAlways:
                 self.stemPlowRuler.unanchorRuler(info["glyph"])
-    
-        # if self.measureAlways:
-        #     self.wantsMeasurements = True
-        #     if self.useShortcutToMoveWhileAlways and self.measureAlways:
-        #         self.stemPlowRuler.unanchorRuler(info["glyph"])
 
     def glyphEditorDidKeyUp(self, info):
         isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
@@ -287,9 +283,6 @@ class StemPlowSubscriber(subscriber.Subscriber):
         ]
         info["itemDescriptions"].extend(myMenuItems)
 
-
-    
-
     # layers updates
     # ----
 
@@ -355,13 +348,14 @@ class StemPlowRuler:
                 segment_index=segment_index,
                 anchor_t=anchor_t
             )
-        print("anchorRuler")
-        print(glyph)
-        print(dict(
-                contour_index=contour_index,
-                segment_index=segment_index,
-                anchor_t=anchor_t
-            ))
+        # DEBUG ISSUE: tuple out of range
+        # print("anchorRuler")
+        # print(glyph)
+        # print(dict(
+        #         contour_index=contour_index,
+        #         segment_index=segment_index,
+        #         anchor_t=anchor_t
+        #     ))
         self.anchored = True
 
     def unanchorRuler(self, glyph):
@@ -378,6 +372,7 @@ class StemPlowRuler:
         contour_index = glyph.lib[self.keyId].get("contour_index")
         segment_index = glyph.lib[self.keyId].get("segment_index")
         anchor_t = glyph.lib[self.keyId].get("anchor_t")
+        
         contour = glyph.contours[contour_index]
         segs = contour.segments
         seg = segs[segment_index]
