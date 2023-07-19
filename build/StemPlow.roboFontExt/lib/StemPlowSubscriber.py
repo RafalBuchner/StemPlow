@@ -66,6 +66,11 @@ def nearestPointFromList(myPoint, points):
     points = sorted(points, key=_sorter)
     return points
 
+def getCurrentPosition(info):
+    glyphView = info["glyphEditor"].getGlyphView()
+    locationInView = glyphView._getMousePosition()
+    cursorPosition = glyphView._converPointFromViewToGlyphSpace(locationInView)
+    return (cursorPosition.x, cursorPosition.y)
 
 class StemPlowSubscriber(subscriber.Subscriber):
     
@@ -106,6 +111,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.oval_BLayer = self.fgBaseLayer.appendSymbolSublayer()
         self.oval_CLayer = self.bgBaseLayer.appendSymbolSublayer()
 
+        self.oval_AnchorIndicatorLayer = self.fgBaseLayer.appendSymbolSublayer()
         # register for defaults change
         events.addObserver(
             self, "extensionDefaultsChanged", extensionID + ".defaultsChanged"
@@ -151,10 +157,9 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
         for oval in [self.oval_ALayer, self.oval_BLayer, self.oval_CLayer]:
             oval.setImageSettings(ovalAttributes)
+        
+        self.oval_AnchorIndicatorLayer.setImageSettings(dict(size=(self.measurementOvalSize+measurementLineSize*5,self.measurementOvalSize+measurementLineSize*5), fillColor=None,strokeColor=ovalColor, strokeWidth=measurementLineSize, name="oval"))
 
-        # if self.measureAlways:
-        #     self.wantsMeasurements = True
-        #     self.showLayers()
 
     def destroy(self):
         self.backgroundContainer.clearSublayers()
@@ -191,33 +196,46 @@ class StemPlowSubscriber(subscriber.Subscriber):
     visibleP2 = False
     position = None
 
+    def glyphEditorDidSetGlyph(self, info):
+        if self.measureAlways and self.useShortcutToMoveWhileAlways: 
+            self.stemPlowRuler.anchorRulerWithoutCursor(info)
+            
     def glyphEditorDidKeyDown(self, info):
-        deviceState = info["deviceState"]
-        # print(f'keyDown: {info["deviceState"]["keyDownWithoutModifiers"]} cmd: {info["deviceState"]["commandDown"]} shift: {info["deviceState"]["shiftDown"]} option: {info["deviceState"]["optionDown"]} control: {info["deviceState"]["controlDown"]}')
         isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
 
-        if not (isTriggerCharPressed and self.measureAlways):
-            self.wantsMeasurements = False
-        else:
+        if isTriggerCharPressed and self.useShortcutToMoveWhileAlways and self.measureAlways:
+            print("always + trigger")
             self.wantsMeasurements = True
             self.showLayers()
             if self.useShortcutToMoveWhileAlways:
-                self.stemPlowRuler.unanchorRuler(info["glyph"])
+                self.stemPlowRuler.unanchorRuler(info)
+        else:
+            self.wantsMeasurements = False
+
+        if isTriggerCharPressed and not (self.useShortcutToMoveWhileAlways and self.measureAlways):
+            print("trigger")
+            self.wantsMeasurements = True
+            self.showLayers()
+        else:
+            self.wantsMeasurements = False
+
+        if not (isTriggerCharPressed and self.useShortcutToMoveWhileAlways) and self.measureAlways:
+            print("always")
+            self.wantsMeasurements = True
+            self.showLayers()
+
 
     def glyphEditorDidKeyUp(self, info):
         isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
         if not self.measureAlways:
             self.hideLayers()
-            # self.wantsMeasurements = False
         else:
             # getting glyph and current mouse location
-            glyph = info["glyph"]
-            glyphView = info["glyphEditor"].getGlyphView()
-            locationInView = glyphView._getMousePosition()
-            cursorPosition = glyphView._converPointFromViewToGlyphSpace(locationInView)
-            cursorPosition = (cursorPosition.x, cursorPosition.y)
             if self.useShortcutToMoveWhileAlways and isTriggerCharPressed and not self.stemPlowRuler.anchored:
-                self.stemPlowRuler.anchorRuler(cursorPosition, glyph)
+                self.stemPlowRuler.anchorRuler( info)
+                self.updateText()
+                self.updateLinesAndOvals()
+
         self.wantsMeasurements = False
 
     def glyphEditorDidMouseDrag(self, info):
@@ -301,6 +319,12 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.oval_ALayer.setPosition((self.nearestP1))
         self.oval_BLayer.setPosition((self.closestPointOnPath))
         self.oval_CLayer.setPosition((self.nearestP2))
+        self.oval_AnchorIndicatorLayer.setPosition((self.closestPointOnPath))
+
+        if self.useShortcutToMoveWhileAlways and self.stemPlowRuler.anchored:
+            self.oval_AnchorIndicatorLayer.setVisible(True)
+        else:
+            self.oval_AnchorIndicatorLayer.setVisible(False)
 
     def updateText(self):
         if round(self.measurementValue1) != 0 and self.textBoxCenter1 is not None:
@@ -340,8 +364,19 @@ class StemPlowRuler:
     #     debugFunctionNestingChain()
     #     self._anchored = value
 
-    def anchorRuler(self, cursorPosition, glyph):
-        _, contour_index, segment_index, anchor_t = self.calculateDetailsForNearestPointOnCurve(cursorPosition, glyph)
+    def anchorRulerWithoutCursor(self, info):
+        glyph = info["glyph"]
+        if len(glyph.contours) > 0 and glyph.lib.get(self.keyId) is None:
+            glyph.lib[self.keyId] = dict( 
+                contour_index=0,
+                segment_index=0,
+                anchor_t=0
+                )
+        self.anchored = True
+
+    def anchorRuler(self, info):
+        glyph = info["glyph"]
+        _, contour_index, segment_index, anchor_t = self.calculateDetailsForNearestPointOnCurve(getCurrentPosition(info), glyph)
 
         glyph.lib[self.keyId] = dict(
                 contour_index=contour_index,
@@ -358,7 +393,8 @@ class StemPlowRuler:
         #     ))
         self.anchored = True
 
-    def unanchorRuler(self, glyph):
+    def unanchorRuler(self, info):
+        glyph = info["glyph"]
         if self.keyId in glyph.lib.keys():
             del(glyph.lib[self.keyId])
         self.anchored = False
