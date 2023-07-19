@@ -8,18 +8,6 @@ from StemPlowSubscriber import (
     extensionID
 )
 
-# print(extensionID,
-# internalGetDefault("measureAgainstComponents"),
-# internalGetDefault("measureAgainstSideBearings"),
-# internalGetDefault("triggerCharacter"),
-# internalGetDefault("measurementTextSize"),
-# internalGetDefault("textColor"),
-# internalGetDefault("measurementLineSize"),
-# internalGetDefault("measurementOvalSize"),
-# internalGetDefault("mainColor"),
-# internalGetDefault("lineColor"),
-# internalGetDefault("ovalColor") )
-
 class _StemPlowSettingsWindowController(ezui.WindowController):
 
     def build(self):
@@ -174,18 +162,15 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         self.mainCallback(sender)
 
     def mainCallback(self, sender):
-        print(">> contentCallback", sender)
         key = sender.identifier
         value = sender.get()
-        print(value)
-        # for key, value in sender.getItemValues().items():
+
         existing = internalGetDefault(key)
         
         if existing == value:
             return
         if key == "triggerCharacter":
             if len(sender.get()) != 1:
-                print(len(sender.get()))
                 return
         internalSetDefault(key, value)
         postEvent(

@@ -11,7 +11,11 @@ from mojo.extensions import (
 )
 
 ## DEBUGGING SETTINGS:
-__DEBUG__ = True
+if AppKit.NSUserName() == "rafalbuchner":
+    __DEBUG__ = True
+else:
+    __DEBUG__ = False
+
 if __DEBUG__:
     import traceback
 def debugFunctionNestingChain(additionalData=""):
@@ -76,17 +80,6 @@ class StemPlowSubscriber(subscriber.Subscriber):
     
     debug = __DEBUG__
     wantsMeasurements = False
-    
-
-    
-    # @property
-    # def wantsMeasurements(self):
-    #     return self._wantsMeasurements
-
-    # @wantsMeasurements.setter
-    # def wantsMeasurements(self, value):
-    #     debugFunctionNestingChain(f"wantsMeasurements = {value}")
-    #     self._wantsMeasurements = value
 
     @property
     def performAnchoring(self):
@@ -178,12 +171,11 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
         if self.measureAlways:
             self.wantsMeasurements = True
-            self.showLayers()
-        else:
-            self.hideLayers()
+        
 
-        if self.performAnchor:
+        if self.performAnchoring:
             self.wantsMeasurements = False
+
 
 
     def destroy(self):
@@ -220,6 +212,15 @@ class StemPlowSubscriber(subscriber.Subscriber):
     visibleP1 = False
     visibleP2 = False
     position = None
+
+    def glyphEditorDidOpen(self, info):
+        if self.measureAlways:
+            self.showLayers()
+        else:
+            self.hideLayers()
+
+        if self.performAnchoring:
+            self.stemPlowRuler.anchorRulerWithoutCursor(info)
 
     def glyphEditorDidSetGlyph(self, info):
         if self.performAnchoring: 
@@ -373,17 +374,6 @@ class StemPlowRuler:
     keyId = extensionKeyStub + "StemPlowRuler"
     anchored = False
 
-    # def __init__(self):
-    #     self._anchored = False
-    
-    # @property
-    # def anchored(self):
-    #     return self._anchored
-
-    # @anchored.setter
-    # def anchored(self, value):
-    #     debugFunctionNestingChain()
-    #     self._anchored = value
     def clearAnchor(self):
         self.anchored = None
 
@@ -406,14 +396,7 @@ class StemPlowRuler:
                 segment_index=segment_index,
                 anchor_t=anchor_t
             )
-        # DEBUG ISSUE: tuple out of range
-        # print("anchorRuler")
-        # print(glyph)
-        # print(dict(
-        #         contour_index=contour_index,
-        #         segment_index=segment_index,
-        #         anchor_t=anchor_t
-        #     ))
+
         self.anchored = True
 
     def unanchorRuler(self, info):
