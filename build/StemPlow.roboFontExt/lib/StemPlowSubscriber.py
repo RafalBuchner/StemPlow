@@ -10,6 +10,23 @@ from mojo.extensions import (
     removeExtensionDefault,
 )
 
+## DEBUGGING SETTINGS:
+__DEBUG__ = True
+if __DEBUG__:
+    import traceback
+def debugFunctionNestingChain():
+    if __DEBUG__:
+        limit = 20
+        print("="*50)
+        print(f"depth: {len(traceback.extract_stack(limit=limit))}")
+        for i, f in enumerate(traceback.extract_stack(limit=limit)):
+            indicator = ""
+            if i != 0:
+                indicator = "└╴"
+            print(f"{' '+'  '*i}{f.name} at {f.lineno:03d} ({f.line})")
+        print()
+## DEBUGGING SETTINGS:
+
 extensionID = "com.rafalbuchner.StemPlow"
 extensionKeyStub = extensionID + "."
 
@@ -50,9 +67,9 @@ def nearestPointFromList(myPoint, points):
     return points
 
 
-class StemPlow(subscriber.Subscriber):
+class StemPlowSubscriber(subscriber.Subscriber):
     
-    debug = True
+    debug = __DEBUG__
     wantsMeasurements = False
     
     def build(self):
@@ -176,22 +193,40 @@ class StemPlow(subscriber.Subscriber):
 
     def glyphEditorDidKeyDown(self, info):
         deviceState = info["deviceState"]
+        isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
 
-        if deviceState["keyDownWithoutModifiers"] != self.triggerCharacter:
+        if not (isTriggerCharPressed and self.measureAlways):
             self.wantsMeasurements = False
         else:
             self.wantsMeasurements = True
             self.showLayers()
-            
+            if self.useShortcutToMoveWhileAlways:
+                self.stemPlowRuler.unanchorRuler(info["glyph"])
+    
         # if self.measureAlways:
         #     self.wantsMeasurements = True
-            # if self.useShortcutToMoveWhileAlways:
-            #     self.stemPlowRuler.unanchorRuler(info["glyph"])
+        #     if self.useShortcutToMoveWhileAlways and self.measureAlways:
+        #         self.stemPlowRuler.unanchorRuler(info["glyph"])
 
-
+    def glyphEditorDidKeyUp(self, info):
+        isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
+        if not self.measureAlways:
+            self.hideLayers()
+            # self.wantsMeasurements = False
+        else:
+            # getting glyph and current mouse location
+            glyph = info["glyph"]
+            glyphView = info["glyphEditor"].getGlyphView()
+            locationInView = glyphView._getMousePosition()
+            cursorPosition = glyphView._converPointFromViewToGlyphSpace(locationInView)
+            cursorPosition = (cursorPosition.x, cursorPosition.y)
+            if self.useShortcutToMoveWhileAlways and isTriggerCharPressed and not self.stemPlowRuler.anchored:
+                self.stemPlowRuler.anchorRuler(cursorPosition, glyph)
+        self.wantsMeasurements = False
 
     def glyphEditorDidMouseDrag(self, info):
-        if not self.wantsMeasurements and not self.stemPlowRuler.anchored:
+        # if not self.wantsMeasurements and not self.stemPlowRuler.anchored:
+        if not self.stemPlowRuler.anchored:
             return
         glyph = info["glyph"]
 
@@ -208,22 +243,9 @@ class StemPlow(subscriber.Subscriber):
         self.updateText()
         self.updateLinesAndOvals()
 
-    def glyphEditorDidKeyUp(self, info):
-        deviceState = info["deviceState"]
-        if not self.measureAlways:
-            self.hideLayers()
-            # self.wantsMeasurements = False
-        else:
-            # getting glyph and current mouse location
-            glyph = info["glyph"]
-            glyphView = info["glyphEditor"].getGlyphView()
-            locationInView = glyphView._getMousePosition()
-            cursorPosition = glyphView._converPointFromViewToGlyphSpace(locationInView)
-            cursorPosition = (cursorPosition.x, cursorPosition.y)
-            if self.useShortcutToMoveWhileAlways \
-                    and deviceState["keyDownWithoutModifiers"] != self.triggerCharacter:
-                self.stemPlowRuler.anchorRuler(cursorPosition, glyph)
-        self.wantsMeasurements = False
+    def glyphEditorDidUndo(self, info):
+        self.glyphEditorDidMouseDrag(info)
+    
 
     def glyphEditorDidMouseDown(self, info):
         if not self.measureAlways:
@@ -313,6 +335,18 @@ class StemPlowRuler:
     curr_segment_idx = 0
     anchored = False
 
+    # def __init__(self):
+    #     self._anchored = False
+    
+    # @property
+    # def anchored(self):
+    #     return self._anchored
+
+    # @anchored.setter
+    # def anchored(self, value):
+    #     debugFunctionNestingChain()
+    #     self._anchored = value
+
     def anchorRuler(self, cursorPosition, glyph):
         _, contour_index, segment_index, anchor_t = self.calculateDetailsForNearestPointOnCurve(cursorPosition, glyph)
 
@@ -321,6 +355,13 @@ class StemPlowRuler:
                 segment_index=segment_index,
                 anchor_t=anchor_t
             )
+        print("anchorRuler")
+        print(glyph)
+        print(dict(
+                contour_index=contour_index,
+                segment_index=segment_index,
+                anchor_t=anchor_t
+            ))
         self.anchored = True
 
     def unanchorRuler(self, glyph):
@@ -571,4 +612,4 @@ def main():
     #     for key in defaults.keys():
     #         removeExtensionDefault(key)
     #     registerExtensionDefaults(defaults)
-    subscriber.registerGlyphEditorSubscriber(StemPlow)
+    subscriber.registerGlyphEditorSubscriber(StemPlowSubscriber)
