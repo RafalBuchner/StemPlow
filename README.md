@@ -20,7 +20,7 @@ You can edit its shortcut, behaviour and appearance by going to
 >
 > - version 1.212
 >	 - `measure always` option
->	 - anchoring system for `measure always`
+>	 - anchoring system while `measure always` is checked, by turning on `use shortcut to move the line`
 >	 - a tiny bit rounder corners for meaurement text boxes
 >
 > - version 1.2

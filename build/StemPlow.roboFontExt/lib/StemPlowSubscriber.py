@@ -208,7 +208,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
             if self.stemPlowRuler.anchored:
                 self.wantsMeasurements = False
             else:
-                self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(self.getGlyphEditor().getGlyph())
+                self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(self.getGlyphEditor().getGlyph().asFontParts())
 
 
     

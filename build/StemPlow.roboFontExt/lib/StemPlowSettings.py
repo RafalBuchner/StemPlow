@@ -17,12 +17,11 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         : Measure:
         [ ] against Components                      @measureAgainstComponents
         :
-        :
         [ ] against SideBearings                    @measureAgainstSideBearings
         :
-        :
         [ ] always                                  @measureAlways
-        [ ] use shortcut to move line               @useShortcutToMoveWhileAlways
+        : Trigger behaviour:
+        [ ] anchore guide to the outline            @useShortcutToMoveWhileAlways
 
         ---
 
@@ -32,17 +31,17 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         ---
 
         : Text Size:
-        [__] points                                 @measurementTextSize
+        [_123_](÷)                                 @measurementTextSize
 
         : Text Color:
         * ColorWell                                 @textColor
 
         ---
         : Oval Size:
-        [__]                                        @measurementOvalSize
+        [_123_](÷)                                        @measurementOvalSize
 
         : Line Size:
-        [__]                                        @measurementLineSize
+        [_123_](÷)                                        @measurementLineSize
 
         : Base Color:
         * ColorWell                                 @mainColor
@@ -121,6 +120,15 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
             descriptionData=descriptionData,
             controller=self
         )
+        self.initialUiSetting()
+
+    def initialUiSetting(self):
+        measureAlways = self.w.getItem("measureAlways")
+        useShortcutToMoveWhileAlways = self.w.getItem("useShortcutToMoveWhileAlways")
+        if measureAlways.get():
+            useShortcutToMoveWhileAlways.enable(True)
+        else:
+            useShortcutToMoveWhileAlways.enable(False)
 
     def started(self):
         self.w.open()
@@ -129,6 +137,11 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         self.mainCallback(sender)
 
     def measureAlwaysCallback(self, sender):
+        useShortcutToMoveWhileAlways = self.w.getItem("useShortcutToMoveWhileAlways")
+        if sender.get():
+            useShortcutToMoveWhileAlways.enable(True)
+        else:
+            useShortcutToMoveWhileAlways.enable(False)
         self.mainCallback(sender)
 
     def useShortcutToMoveWhileAlwaysCallback(self, sender):
