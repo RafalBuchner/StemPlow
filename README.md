@@ -22,6 +22,8 @@ You can edit its shortcut, behaviour and appearance by going to
 >	 - `measure always` option
 >	 - anchoring system while `measure always` is checked, by turning on `use shortcut to move the line`
 >	 - a tiny bit rounder corners for meaurement text boxes
+>	 - floating point in text boxes now depends on GlyphEditor's scale. The more you scale, the more digits after the floating point will appear
+>	 - 
 >
 > - version 1.2
 >	 - update to Merz

@@ -130,6 +130,11 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.clearData()
         self.loadDefaults()
 
+    def glyphEditorDidScale(self, info):
+        scale = info["scale"]
+        self.stemPlowRuler.setScale(scale)
+        self.updateText()
+
     def loadDefaults(self):
         # load
         self.stemPlowRuler.loadDefaults()
@@ -367,16 +372,29 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.oval_AnchorIndicatorLayer.setVisible(False)
 
     def updateText(self):
+        scale = self.stemPlowRuler.scale
+        roundingFloatValue = None
+        if scale is not None:
+            if scale >= 0 and scale < 3:
+                roundingFloatValue = None
+            elif scale >= 3 and scale < 5:
+                roundingFloatValue = 1
+            elif scale >= 5 and scale < 7:
+                roundingFloatValue = 2
+            elif scale >= 7:
+                roundingFloatValue = 3
+
+
         if round(self.measurementValue1) != 0 and self.textBoxCenter1 is not None:
             self.text1Layer.setVisible(True)
-            self.text1Layer.setText(str(round(self.measurementValue1,2)))
+            self.text1Layer.setText(str(round(self.measurementValue1,roundingFloatValue)))
             self.text1Layer.setPosition(self.textBoxCenter1)
         else:
             self.text1Layer.setVisible(False)
 
         if round(self.measurementValue2) != 0 and self.textBoxCenter2 is not None:
             self.text2Layer.setVisible(True)
-            self.text2Layer.setText(str(round(self.measurementValue2,2)))
+            self.text2Layer.setText(str(round(self.measurementValue2,roundingFloatValue)))
             self.text2Layer.setPosition(self.textBoxCenter2)
         else:
             self.text2Layer.setVisible(False)
@@ -388,6 +406,10 @@ class StemPlowSubscriber(subscriber.Subscriber):
 class StemPlowRuler:
     keyId = extensionKeyStub + "StemPlowRuler"
     anchored = False
+    scale = None
+
+    def setScale(self, value):
+        self.scale = value
 
     def clearAnchor(self):
         self.anchored = None
