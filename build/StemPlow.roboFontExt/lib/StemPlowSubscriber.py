@@ -244,6 +244,11 @@ class StemPlowSubscriber(subscriber.Subscriber):
             else:
                 self.wantsMeasurements = False
 
+        # whenever user hits arrow keys it will execute code in glyphEditorDidMouseDrag
+        if info["deviceState"]["keyDown"] in "": # arrow keys:
+            self.glyphEditorDidMouseDrag(info)
+
+
 
 
     def glyphEditorDidKeyUp(self, info):
