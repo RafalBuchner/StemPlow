@@ -200,6 +200,16 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
     def extensionDefaultsChanged(self, event):
         self.loadDefaults()
+        if self.measureAlways:
+            self.showLayers()
+        else:
+            self.hideLayers()
+        if self.performAnchoring:
+            if self.stemPlowRuler.anchored:
+                self.wantsMeasurements = False
+            else:
+                self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(self.getGlyphEditor().getGlyph())
+
 
     
     closestPointOnPath = None
@@ -220,11 +230,11 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.hideLayers()
 
         if self.performAnchoring:
-            self.stemPlowRuler.anchorRulerWithoutCursor(info)
+            self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info['glyph'])
 
     def glyphEditorDidSetGlyph(self, info):
         if self.performAnchoring: 
-            self.stemPlowRuler.anchorRulerWithoutCursor(info)
+            self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info['glyph'])
             
     def glyphEditorDidKeyDown(self, info):
         isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
@@ -382,8 +392,8 @@ class StemPlowRuler:
     def clearAnchor(self):
         self.anchored = None
 
-    def anchorRulerWithoutCursor(self, info):
-        glyph = info["glyph"]
+    def anchorRulerToGlyphWithoutCursor(self, glyph):
+        # glyph = info["glyph"]
         if len(glyph.contours) > 0 and glyph.lib.get(self.keyId) is None:
             glyph.lib[self.keyId] = dict( 
                 contour_index=0,
