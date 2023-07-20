@@ -46,8 +46,9 @@ defaults = {
     extensionKeyStub + "measurementTextSize": 10,
     extensionKeyStub + "measureAgainstComponents": True,
     extensionKeyStub + "measureAgainstSideBearings": True,
+    extensionKeyStub + "showLaserMeasureNames": True,
     extensionKeyStub + "measureAlways": False,
-    extensionKeyStub + "useShortcutToMoveWhileAlways": True,
+    extensionKeyStub + "useShortcutToMoveWhileAlways": False,
 }
 
 registerExtensionDefaults(defaults)
@@ -373,6 +374,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
     def updateText(self):
         scale = self.stemPlowRuler.scale
+
         roundingFloatValue = None
         if scale is not None:
             if scale >= 0 and scale < 3:
@@ -383,7 +385,6 @@ class StemPlowSubscriber(subscriber.Subscriber):
                 roundingFloatValue = 2
             elif scale >= 7:
                 roundingFloatValue = 3
-
 
         if round(self.measurementValue1) != 0 and self.textBoxCenter1 is not None:
             self.text1Layer.setVisible(True)

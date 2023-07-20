@@ -19,9 +19,12 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         :
         [ ] against SideBearings                    @measureAgainstSideBearings
         :
+        [ ] display Named Values from Laser Measure @showLaserMeasureNames
+        :
         [ ] always                                  @measureAlways
         : Trigger behaviour:
         [ ] anchore guide to the outline            @useShortcutToMoveWhileAlways
+
 
         ---
 
@@ -66,6 +69,9 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
             ),
             measureAgainstSideBearings=dict(
                 value=internalGetDefault("measureAgainstSideBearings")
+            ),
+            showLaserMeasureNames=dict(
+                value=internalGetDefault("showLaserMeasureNames")
             ),
             measureAlways=dict(
                 value=internalGetDefault("measureAlways")
@@ -148,6 +154,9 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         self.mainCallback(sender)
 
     def measureAgainstSideBearingsCallback(self, sender):
+        self.mainCallback(sender)
+    
+    def showLaserMeasureNames(self, sender):
         self.mainCallback(sender)
 
     def triggerCharacterCallback(self, sender):

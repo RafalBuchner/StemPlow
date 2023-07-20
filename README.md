@@ -23,7 +23,7 @@ You can edit its shortcut, behaviour and appearance by going to
 >	 - anchoring system while `measure always` is checked, by turning on `use shortcut to move the line`
 >	 - a tiny bit rounder corners for meaurement text boxes
 >	 - floating point in text boxes now depends on GlyphEditor's scale. The more you scale, the more digits after the floating point will appear
->	 - 
+>	 - displaying Named Values defined with [`Laser Measure extension`](https://github.com/typesupply/lasermeasure/) by @typesupply.
 >
 > - version 1.2
 >	 - update to Merz
