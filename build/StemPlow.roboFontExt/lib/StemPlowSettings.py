@@ -156,7 +156,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
     def measureAgainstSideBearingsCallback(self, sender):
         self.mainCallback(sender)
     
-    def showLaserMeasureNames(self, sender):
+    def showLaserMeasureNamesCallback(self, sender):
         self.mainCallback(sender)
 
     def triggerCharacterCallback(self, sender):

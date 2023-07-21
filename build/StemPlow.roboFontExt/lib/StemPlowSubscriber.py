@@ -202,6 +202,8 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
 
 
+
+
     def destroy(self):
         self.backgroundContainer.clearSublayers()
         self.foregroundContainer.clearSublayers()
@@ -224,16 +226,30 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
     def extensionDefaultsChanged(self, event):
         self.loadDefaults()
-        if self.measureAlways:
-            self.showLayers()
+
+        # text gui updates
+        if self.showLaserMeasureNames:
+            self.stemPlowRuler.findNames()
         else:
-            self.hideLayers()
+            self.stemPlowRuler.clearNames()
+
+        try:
+            # it can catch an error, while self.measurementValue1 or self.measurementValue2 is None. I don't want to add another if statement inside of `self.updateText()`, and catching `self.measurementValue1 is None and self.measurementValue2 is None` seems to be stupid here 
+            self.updateText()
+        except:
+            pass
+
+        # measurement updates
         if self.performAnchoring:
             if self.stemPlowRuler.anchored:
                 self.wantsMeasurements = False
             else:
                 self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(self.getGlyphEditor().getGlyph().asFontParts())
 
+        if self.measureAlways:
+            self.showLayers()
+        else:
+            self.hideLayers()
 
     
     closestPointOnPath = None
@@ -401,6 +417,8 @@ class StemPlowSubscriber(subscriber.Subscriber):
     def updateText(self):
         if self.showLaserMeasureNames:
             self.stemPlowRuler.findNames()
+        else:
+            self.stemPlowRuler.clearNames()
 
         
         roundingFloatValue = self.stemPlowRuler.getRoundingFloatValue()
@@ -622,6 +640,7 @@ class StemPlowRuler:
         self.measureAgainstComponents = internalGetDefault("measureAgainstComponents")
         self.measureAgainstSideBearings = internalGetDefault("measureAgainstSideBearings")
 
+
     def getGuidesAndClosestPoint(self, cursorPosition, glyph):
         """returns 2 intersection lists"""
         closestPointsRef = []
@@ -756,15 +775,18 @@ class StemPlowRuler:
             closestPointOnPath
         )
 
-    def findNames(self):
+    def clearNames(self):
         self.currentNames1 = None
+        self.currentNames2 = None
+
+    def findNames(self):
+        self.clearNames()
         m1 = round(self.currentMeasurement1)
         names = self.namedWidthMeasurements1.get(m1, [])
         names += self.namedHeightMeasurements1.get(m1, [])
         if names:
             self.currentNames1 = names
 
-        self.currentNames2 = None
         m2 = round(self.currentMeasurement2)
         names = self.namedWidthMeasurements2.get(m2, [])
         names += self.namedHeightMeasurements2.get(m2, [])
