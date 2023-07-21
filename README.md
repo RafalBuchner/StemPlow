@@ -22,7 +22,7 @@ You can edit its shortcut, behaviour and appearance by going to
 >	 - `measure always` an option, which allows you to see the StemPlow all the time
 >	 - Anchoring System ( in order to turn it on check `anchor guide to the outline` in the settings, while `measure always` is on as well )
 >		 > when this option is turned on as well as `measure always`, use your shortcut to anchor and unanchor StemPlow to your outlines. The ruler should stick to your shape. 
->	 - displaying Named Values defined with [`Laser Measure extension`](https://github.com/typesupply/lasermeasure/)extension by @typesupply
+>	 - displaying Named Values defined with [`Laser Measure extension`](https://github.com/typesupply/lasermeasure/) by @typesupply
 >	 - a tiny bit rounder corners for measurement text boxes
 >	 - floating point in text boxes now depends on GlyphEditor's scale. The more you scale, the more digits after the floating point will appear
 >
