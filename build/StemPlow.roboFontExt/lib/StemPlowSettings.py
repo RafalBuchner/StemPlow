@@ -23,7 +23,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         :
         [ ] always                                  @measureAlways
         : Trigger behaviour:
-        [ ] anchore guide to the outline            @useShortcutToMoveWhileAlways
+        [ ] anchor guide to the outline             @useShortcutToMoveWhileAlways
 
 
         ---
