@@ -53,6 +53,8 @@ defaults = {
 
 registerExtensionDefaults(defaults)
 
+def formatNames(*args):
+    return "\n".join(*args)
 
 def internalGetDefault(key):
     key = extensionKeyStub + key
@@ -110,8 +112,14 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.text1Layer = self.fgBaseLayer.appendTextLineSublayer(
             visible=False, name="measurementValue1"
         )
+        self.namedValues1Layer = self.fgBaseLayer.appendTextLineSublayer(
+            visible=False, name="namedValue1"
+        )
         self.text2Layer = self.fgBaseLayer.appendTextLineSublayer(
             visible=False, name="measurementValue2"
+        )
+        self.namedValues2Layer = self.fgBaseLayer.appendTextLineSublayer(
+            visible=False, name="namedValue2"
         )
 
         # geometry
@@ -132,6 +140,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.loadDefaults()
 
     def glyphEditorDidScale(self, info):
+        # I think it causes flickering while scalling
         scale = info["scale"]
         self.stemPlowRuler.setScale(scale)
         self.updateText()
@@ -144,6 +153,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.measureAlways = bool(internalGetDefault("measureAlways"))
         self.useShortcutToMoveWhileAlways = bool(internalGetDefault("useShortcutToMoveWhileAlways"))
         self.measureAgainstComponents = bool(internalGetDefault("measureAgainstComponents"))
+        self.showLaserMeasureNames = bool(internalGetDefault("showLaserMeasureNames"))
         self.measurementOvalSize = internalGetDefault("measurementOvalSize")
         measurementLineSize = internalGetDefault("measurementLineSize")
         textSize = internalGetDefault("measurementTextSize")
@@ -166,9 +176,15 @@ class StemPlowSubscriber(subscriber.Subscriber):
         )
         ovalAttributes = dict(size=(self.measurementOvalSize,self.measurementOvalSize), fillColor=ovalColor, name="oval")
         
+        self.lineLayer.setPropertiesByName(lineAttributes)
         self.text1Layer.setPropertiesByName(textAttributes)
         self.text2Layer.setPropertiesByName(textAttributes)
-        self.lineLayer.setPropertiesByName(lineAttributes)
+        self.namedValues1Layer.setPropertiesByName(textAttributes)
+        self.namedValues2Layer.setPropertiesByName(textAttributes)
+        self.namedValues1Layer.setOffset((0,-textSize-5))
+        self.namedValues2Layer.setOffset((0,-textSize-5))
+        self.namedValues1Layer.setVerticalAlignment("top")
+        self.namedValues2Layer.setVerticalAlignment("top")
 
         for oval in [self.oval_ALayer, self.oval_BLayer, self.oval_CLayer]:
             oval.setImageSettings(ovalAttributes)
@@ -181,6 +197,8 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
         if self.performAnchoring:
             self.wantsMeasurements = False
+
+        self.stemPlowRuler.loadNamedMeasurements(self.getFont())
 
 
 
@@ -329,6 +347,8 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.closestPointOnPath
         ) = self.stemPlowRuler.getThicknessData(cursorPosition, glyph, self.stemPlowRuler.getGuidesAndClosestPoint)
 
+        
+        
         self.updateText()
         self.updateLinesAndOvals()
 
@@ -345,6 +365,9 @@ class StemPlowSubscriber(subscriber.Subscriber):
             ("Create Stem Plow Guide", _stemPlowGuide)
         ]
         info["itemDescriptions"].extend(myMenuItems)
+    
+    def fontMeasurementsChanged(self, info):
+        self.stemPlowRuler.loadNamedMeasurements(self.getFont())
 
     # layers updates
     # ----
@@ -357,6 +380,9 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.textBoxCenter2 = None
         self.nearestP1 = None
         self.nearestP2 = None
+        self.stemPlowRuler.anchored = False
+        self.stemPlowRuler.currentNames1 = None
+        self.stemPlowRuler.currentNames2 = None
 
     def updateLinesAndOvals(self):
         self.lineLayer.setStartPoint(self.nearestP1)
@@ -373,9 +399,73 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.oval_AnchorIndicatorLayer.setVisible(False)
 
     def updateText(self):
-        scale = self.stemPlowRuler.scale
+        if self.showLaserMeasureNames:
+            self.stemPlowRuler.findNames()
 
+        
+        roundingFloatValue = self.stemPlowRuler.getRoundingFloatValue()
+
+        if round(self.measurementValue1) != 0 and self.textBoxCenter1 is not None:
+            self.text1Layer.setVisible(True)
+            self.text1Layer.setText(str(round(self.measurementValue1,roundingFloatValue)))
+            self.text1Layer.setPosition(self.textBoxCenter1)
+
+            ###
+            if self.stemPlowRuler.currentNames1:
+                self.namedValues1Layer.setText(formatNames(self.stemPlowRuler.currentNames1))
+                self.namedValues1Layer.setPosition(self.textBoxCenter1)
+                self.namedValues1Layer.setVisible(True)
+            else:
+                self.namedValues1Layer.setVisible(False)
+        else:
+            self.text1Layer.setVisible(False)
+            self.namedValues1Layer.setVisible(False)
+
+        if round(self.measurementValue2) != 0 and self.textBoxCenter2 is not None:
+            self.text2Layer.setVisible(True)
+            self.text2Layer.setText(str(round(self.measurementValue2,roundingFloatValue)))
+            self.text2Layer.setPosition(self.textBoxCenter2)
+
+            ###
+            if self.stemPlowRuler.currentNames2:
+                self.namedValues2Layer.setText(formatNames(self.stemPlowRuler.currentNames2))
+                self.namedValues2Layer.setPosition(self.textBoxCenter2)
+                self.namedValues2Layer.setVisible(True)
+            else:
+                self.namedValues2Layer.setVisible(False)
+        else:
+            self.text2Layer.setVisible(False)
+            self.namedValues2Layer.setVisible(False)
+
+    # Objects
+    # -------
+
+    def getFont(self):
+        window = self.getGlyphEditor()
+        glyph = window.getGlyph()
+        # in single window mode glyph will
+        # be None at start up, so hack around
+        if glyph is None:
+            font = window.document.getFont()
+        else:
+            font = glyph.font
+        return font
+
+    
+
+class StemPlowRuler:
+    keyId = extensionKeyStub + "StemPlowRuler"
+    anchored = False
+    scale = None
+    currentNames1 = None
+    currentNames2 = None
+
+    def getRoundingFloatValue(self):
+        # used for scaling
+        # roundingFloatValue = 2 # use when glyphEditorDidScale is disabled
         roundingFloatValue = None
+
+        scale = self.scale
         if scale is not None:
             if scale >= 0 and scale < 3:
                 roundingFloatValue = None
@@ -385,29 +475,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
                 roundingFloatValue = 2
             elif scale >= 7:
                 roundingFloatValue = 3
-
-        if round(self.measurementValue1) != 0 and self.textBoxCenter1 is not None:
-            self.text1Layer.setVisible(True)
-            self.text1Layer.setText(str(round(self.measurementValue1,roundingFloatValue)))
-            self.text1Layer.setPosition(self.textBoxCenter1)
-        else:
-            self.text1Layer.setVisible(False)
-
-        if round(self.measurementValue2) != 0 and self.textBoxCenter2 is not None:
-            self.text2Layer.setVisible(True)
-            self.text2Layer.setText(str(round(self.measurementValue2,roundingFloatValue)))
-            self.text2Layer.setPosition(self.textBoxCenter2)
-        else:
-            self.text2Layer.setVisible(False)
-    # calculations
-    # ------------
-
-    
-
-class StemPlowRuler:
-    keyId = extensionKeyStub + "StemPlowRuler"
-    anchored = False
-    scale = None
+        return roundingFloatValue
 
     def setScale(self, value):
         self.scale = value
@@ -673,6 +741,11 @@ class StemPlowRuler:
             textBoxCenter2 = StemMath.calcLine(0.5, closestPointOnPath, nearestP2)
             thicknessValue2 = StemMath.lenghtAB(closestPointOnPath, nearestP2)
 
+        ################
+        # Named Values
+        self.currentMeasurement1 = thicknessValue1
+        self.currentMeasurement2 = thicknessValue2
+
         return (
             textBoxCenter1,
             thicknessValue1,
@@ -682,6 +755,81 @@ class StemPlowRuler:
             nearestP2,
             closestPointOnPath
         )
+
+    def findNames(self):
+        self.currentNames1 = None
+        m1 = round(self.currentMeasurement1)
+        names = self.namedWidthMeasurements1.get(m1, [])
+        names += self.namedHeightMeasurements1.get(m1, [])
+        if names:
+            self.currentNames1 = names
+
+        self.currentNames2 = None
+        m2 = round(self.currentMeasurement2)
+        names = self.namedWidthMeasurements2.get(m2, [])
+        names += self.namedHeightMeasurements2.get(m2, [])
+        if names:
+            self.currentNames2 = names
+
+    def loadNamedMeasurements(self, font):
+        libKey = "com.typesupply.LaserMeasure.measurements"
+        stored = font.lib.get(libKey, {})
+        self.namedWidthMeasurements1 = {}
+        self.namedWidthMeasurements2 = {}
+        self.namedHeightMeasurements1 = {}
+        self.namedHeightMeasurements2 = {}
+        for name, data in stored.items():
+            width = data.get("width")
+            height = data.get("height")
+            key = None
+            location1 = None
+            location2 = None
+
+            if width is not None:
+                location1 = self.namedWidthMeasurements1
+                location2 = self.namedWidthMeasurements2
+                key = width
+                name = f"W: {name}"
+
+            elif height is not None:
+                location1 = self.namedHeightMeasurements1
+                location2 = self.namedHeightMeasurements2
+                key = height
+                name = f"H: {name}"
+
+            if location1 is not None:
+                if key not in location1:
+                    location1[key] = []
+                location1[key].append(name)
+
+            if location2 is not None:
+                if key not in location2:
+                    location2[key] = []
+                location2[key].append(name)
+
+        dicts = [
+            self.namedWidthMeasurements1,
+            self.namedWidthMeasurements2,
+            self.namedHeightMeasurements1,
+            self.namedHeightMeasurements2,
+        ]
+        for d in dicts:
+            for d, v in d.items():
+                v.sort()
+
+
+try:
+    key = "com.typesupply.LaserMeasure.measurementsChanged"
+    subscriber.registerSubscriberEvent(
+        subscriberEventName=key,
+        methodName="fontMeasurementsChanged",
+        lowLevelEventNames=[key],
+        dispatcher="roboFont",
+        delay=0.1
+    )
+except AssertionError:
+    pass
+
 def main():
     # if AppKit.NSUserName() == "rafalbuchner":
     #     for key in defaults.keys():
