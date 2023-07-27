@@ -25,7 +25,7 @@ def debugFunctionNestingChain(additionalData=""):
         print("="*50)
         print(f"depth: {len(stack)}")
         for i, f in enumerate(stack):
-            if i == len(stack)-1: 
+            if i == len(stack)-1:
                 break
             print(f"{' '+'  '*i}{f.name} at {f.lineno:03d} ({additionalData})")
         print()
@@ -80,14 +80,14 @@ def getCurrentPosition(info):
     return (cursorPosition.x, cursorPosition.y)
 
 class StemPlowSubscriber(subscriber.Subscriber):
-    
+
     debug = __DEBUG__
     wantsMeasurements = False
 
     @property
     def performAnchoring(self):
         return self.useShortcutToMoveWhileAlways and self.measureAlways
-    
+
 
     def build(self):
         self.stemPlowRuler = StemPlowRuler()
@@ -175,7 +175,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
             figureStyle="tabular"
         )
         ovalAttributes = dict(size=(self.measurementOvalSize,self.measurementOvalSize), fillColor=ovalColor, name="oval")
-        
+
         self.lineLayer.setPropertiesByName(lineAttributes)
         self.text1Layer.setPropertiesByName(textAttributes)
         self.text2Layer.setPropertiesByName(textAttributes)
@@ -188,12 +188,12 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
         for oval in [self.oval_ALayer, self.oval_BLayer, self.oval_CLayer]:
             oval.setImageSettings(ovalAttributes)
-        
+
         self.oval_AnchorIndicatorLayer.setImageSettings(dict(size=(self.measurementOvalSize+measurementLineSize*5,self.measurementOvalSize+measurementLineSize*5), fillColor=None,strokeColor=ovalColor, strokeWidth=measurementLineSize, name="oval"))
 
         if self.measureAlways:
             self.wantsMeasurements = True
-        
+
 
         if self.performAnchoring:
             self.wantsMeasurements = False
@@ -233,11 +233,10 @@ class StemPlowSubscriber(subscriber.Subscriber):
         else:
             self.stemPlowRuler.clearNames()
 
-        try:
-            # it can catch an error, while self.measurementValue1 or self.measurementValue2 is None. I don't want to add another if statement inside of `self.updateText()`, and catching `self.measurementValue1 is None and self.measurementValue2 is None` seems to be stupid here 
-            self.updateText()
-        except:
-            pass
+
+        # it can catch an error, while self.measurementValue1 or self.measurementValue2 is None. I don't want to add another if statement inside of `self.updateText()`, and catching `self.measurementValue1 is None and self.measurementValue2 is None` seems to be stupid here
+        self.updateText()
+
 
         # measurement updates
         if self.performAnchoring:
@@ -251,10 +250,10 @@ class StemPlowSubscriber(subscriber.Subscriber):
         else:
             self.hideLayers()
 
-    
+
     closestPointOnPath = None
-    measurementValue1 = None
-    measurementValue2 = None
+    measurementValue1 = 0
+    measurementValue2 = 0
     textBoxCenter1 = None
     textBoxCenter2 = None
     nearestP1 = None
@@ -273,9 +272,9 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info['glyph'])
 
     def glyphEditorDidSetGlyph(self, info):
-        if self.performAnchoring: 
+        if self.performAnchoring:
             self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info['glyph'])
-            
+
     def glyphEditorDidKeyDown(self, info):
         isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
 
@@ -338,7 +337,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
     def glyphEditorDidUndo(self, info):
         self.glyphEditorDidMouseDrag(info)
-    
+
 
     def glyphEditorDidMouseDown(self, info):
         if not self.measureAlways:
@@ -352,7 +351,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
         if len(glyph.contours) + len(glyph.components) == 0:
                 return
         cursorPosition = tuple(info["locationInGlyph"])
-        
+
         (
             self.textBoxCenter1,
             self.measurementValue1,
@@ -363,8 +362,8 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.closestPointOnPath
         ) = self.stemPlowRuler.getThicknessData(cursorPosition, glyph, self.stemPlowRuler.getGuidesAndClosestPoint)
 
-        
-        
+
+
         self.updateText()
         self.updateLinesAndOvals()
 
@@ -381,7 +380,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
             ("Create Stem Plow Guide", _stemPlowGuide)
         ]
         info["itemDescriptions"].extend(myMenuItems)
-    
+
     def fontMeasurementsChanged(self, info):
         self.stemPlowRuler.loadNamedMeasurements(self.getFont())
 
@@ -390,8 +389,8 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
     def clearData(self):
         self.wantsMeasurements = False
-        self.measurementValue1 = None
-        self.measurementValue2 = None
+        self.measurementValue1 = 0
+        self.measurementValue2 = 0
         self.textBoxCenter1 = None
         self.textBoxCenter2 = None
         self.nearestP1 = None
@@ -420,9 +419,8 @@ class StemPlowSubscriber(subscriber.Subscriber):
         else:
             self.stemPlowRuler.clearNames()
 
-        
-        roundingFloatValue = self.stemPlowRuler.getRoundingFloatValue()
 
+        roundingFloatValue = self.stemPlowRuler.getRoundingFloatValue()
         if round(self.measurementValue1) != 0 and self.textBoxCenter1 is not None:
             self.text1Layer.setVisible(True)
             self.text1Layer.setText(str(round(self.measurementValue1,roundingFloatValue)))
@@ -469,7 +467,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
             font = glyph.font
         return font
 
-    
+
 
 class StemPlowRuler:
     keyId = extensionKeyStub + "StemPlowRuler"
@@ -504,7 +502,7 @@ class StemPlowRuler:
     def anchorRulerToGlyphWithoutCursor(self, glyph):
         # glyph = info["glyph"]
         if len(glyph.contours) > 0 and glyph.lib.get(self.keyId) is None:
-            glyph.lib[self.keyId] = dict( 
+            glyph.lib[self.keyId] = dict(
                 contour_index=0,
                 segment_index=0,
                 anchor_t=0
@@ -538,7 +536,10 @@ class StemPlowRuler:
         contour_index = glyph.lib[self.keyId].get("contour_index")
         segment_index = glyph.lib[self.keyId].get("segment_index")
         anchor_t = glyph.lib[self.keyId].get("anchor_t")
-        
+
+        if anchor_t is None:
+            continue
+
         contour = glyph.contours[contour_index]
         segs = contour.segments
         seg = segs[segment_index]
