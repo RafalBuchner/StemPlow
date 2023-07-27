@@ -538,7 +538,7 @@ class StemPlowRuler:
         anchor_t = glyph.lib[self.keyId].get("anchor_t")
 
         if anchor_t is None:
-            continue
+            return
 
         contour = glyph.contours[contour_index]
         segs = contour.segments
