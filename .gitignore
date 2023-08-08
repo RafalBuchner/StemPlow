@@ -1,8 +1,13 @@
 # General
 .DS_Store
+Thumbs.db
+.idea
 .AppleDouble
 .LSOverride
 playground.py
+
+# VS code
+.vscode
 
 # drawbot tests
 __drawbot_output__

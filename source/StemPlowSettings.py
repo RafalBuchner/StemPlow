@@ -8,18 +8,6 @@ from StemPlowSubscriber import (
     extensionID
 )
 
-print(extensionID,
-internalGetDefault("measureAgainstComponents"),
-internalGetDefault("measureAgainstSideBearings"),
-internalGetDefault("triggerCharacter"),
-internalGetDefault("measurementTextSize"),
-internalGetDefault("textColor"),
-internalGetDefault("measurementLineSize"),
-internalGetDefault("measurementOvalSize"),
-internalGetDefault("mainColor"),
-internalGetDefault("lineColor"),
-internalGetDefault("ovalColor") )
-
 class _StemPlowSettingsWindowController(ezui.WindowController):
 
     def build(self):
@@ -30,6 +18,13 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         [ ] against Components                      @measureAgainstComponents
         :
         [ ] against SideBearings                    @measureAgainstSideBearings
+        :
+        [ ] display Named Values from Laser Measure @showLaserMeasureNames
+        :
+        [ ] always                                  @measureAlways
+        : Trigger behaviour:
+        [ ] anchor guide to the outline             @useShortcutToMoveWhileAlways
+
 
         ---
 
@@ -39,17 +34,17 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         ---
 
         : Text Size:
-        [__] points                                 @measurementTextSize
+        [_123_](÷)                                 @measurementTextSize
 
         : Text Color:
         * ColorWell                                 @textColor
 
         ---
         : Oval Size:
-        [__]                                        @measurementOvalSize
+        [_123_](÷)                                        @measurementOvalSize
 
         : Line Size:
-        [__]                                        @measurementLineSize
+        [_123_](÷)                                        @measurementLineSize
 
         : Base Color:
         * ColorWell                                 @mainColor
@@ -74,6 +69,15 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
             ),
             measureAgainstSideBearings=dict(
                 value=internalGetDefault("measureAgainstSideBearings")
+            ),
+            showLaserMeasureNames=dict(
+                value=internalGetDefault("showLaserMeasureNames")
+            ),
+            measureAlways=dict(
+                value=internalGetDefault("measureAlways")
+            ),
+            useShortcutToMoveWhileAlways=dict(
+                value=internalGetDefault("useShortcutToMoveWhileAlways")
             ),
             triggerCharacter=dict(
                 width=20,
@@ -122,24 +126,79 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
             descriptionData=descriptionData,
             controller=self
         )
+        self.initialUiSetting()
+
+    def initialUiSetting(self):
+        measureAlways = self.w.getItem("measureAlways")
+        useShortcutToMoveWhileAlways = self.w.getItem("useShortcutToMoveWhileAlways")
+        if measureAlways.get():
+            useShortcutToMoveWhileAlways.enable(True)
+        else:
+            useShortcutToMoveWhileAlways.enable(False)
 
     def started(self):
         self.w.open()
 
-    def contentCallback(self, sender):
-        for key, value in sender.getItemValues().items():
-            existing = internalGetDefault(key)
-            print(key, value, existing)
-            if existing == value:
-                continue
-            internalSetDefault(key, value)
+    def measureAgainstComponentsCallback(self, sender):
+        self.mainCallback(sender)
+
+    def measureAlwaysCallback(self, sender):
+        useShortcutToMoveWhileAlways = self.w.getItem("useShortcutToMoveWhileAlways")
+        if sender.get():
+            useShortcutToMoveWhileAlways.enable(True)
+        else:
+            useShortcutToMoveWhileAlways.enable(False)
+        self.mainCallback(sender)
+
+    def useShortcutToMoveWhileAlwaysCallback(self, sender):
+        self.mainCallback(sender)
+
+    def measureAgainstSideBearingsCallback(self, sender):
+        self.mainCallback(sender)
+    
+    def showLaserMeasureNamesCallback(self, sender):
+        self.mainCallback(sender)
+
+    def triggerCharacterCallback(self, sender):
+        self.mainCallback(sender)
+
+    def measurementTextSizeCallback(self, sender):
+        self.mainCallback(sender)
+
+    def textColorCallback(self, sender):
+        self.mainCallback(sender)
+
+    def measurementLineSizeCallback(self, sender):
+        self.mainCallback(sender)
+
+    def measurementOvalSizeCallback(self, sender):
+        self.mainCallback(sender)
+
+    def mainColorCallback(self, sender):
+        self.mainCallback(sender)
+
+    def lineColorCallback(self, sender):
+        self.mainCallback(sender)
+
+    def ovalColorCallback(self, sender):
+        self.mainCallback(sender)
+
+    def mainCallback(self, sender):
+        key = sender.identifier
+        value = sender.get()
+
+        existing = internalGetDefault(key)
+        
+        if existing == value:
+            return
+        if key == "triggerCharacter":
+            if len(sender.get()) != 1:
+                return
+        internalSetDefault(key, value)
         postEvent(
             extensionID + ".defaultsChanged"
         )
 
-    def triggerCharacterCallback(self, sender):
-        if len(sender.get()) == 1:
-            self.contentCallback(sender)
 
 
 note = """
