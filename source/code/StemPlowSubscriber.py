@@ -703,6 +703,8 @@ class StemPlowRuler:
 
             return guideline1, guideline2, closestPointOnPath
 
+    currentMeasurement1 = None
+    currentMeasurement2 = None
     def getThicknessData(self, position, glyph, method):
         if len(glyph.contours) == 0:
             return
@@ -782,6 +784,8 @@ class StemPlowRuler:
 
     def findNames(self):
         self.clearNames()
+        if self.currentMeasurement1 is None or self.currentMeasurement2 is None:
+            return
         m1 = round(self.currentMeasurement1)
         names = self.namedWidthMeasurements1.get(m1, [])
         names += self.namedHeightMeasurements1.get(m1, [])
