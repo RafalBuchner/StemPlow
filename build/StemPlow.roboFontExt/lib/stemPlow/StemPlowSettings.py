@@ -2,7 +2,7 @@ import ezui
 from mojo.events import postEvent
 
 
-from StemPlowSubscriber import (
+from stemPlow.StemPlowSubscriber import (
     internalGetDefault,
     internalSetDefault,
     extensionID
@@ -15,15 +15,15 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         = TwoColumnForm
 
         : Measure:
-        [ ] against Components                              @measureAgainstComponents
+        [ ] against Components                      @measureAgainstComponents
         :
-        [ ] against SideBearings                            @measureAgainstSideBearings
+        [ ] against SideBearings                    @measureAgainstSideBearings
         :
-        [ ] display Named Values from Laser Measure      @showLaserMeasureNames
+        [ ] display Named Values from Laser Measure @showLaserMeasureNames
         :
-        [ ] always                                            @measureAlways
+        [ ] always                                  @measureAlways
         : Trigger behaviour:
-        [ ] anchor guide to the outline                     @useShortcutToMoveWhileAlways
+        [ ] anchor guide to the outline             @useShortcutToMoveWhileAlways
 
 
         ---

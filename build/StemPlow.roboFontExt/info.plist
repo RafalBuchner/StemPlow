@@ -6,9 +6,9 @@
 	<array>
 		<dict>
 			<key>path</key>
-			<string>StemPlowSettings.py</string>
+			<string>stemPlow/StemPlowSettings.py</string>
 			<key>preferredName</key>
-			<string>↔ Stem Plow Settings</string>
+			<string>Settings…</string>
 			<key>shortKey</key>
 			<string></string>
 		</dict>
@@ -18,20 +18,20 @@
 	<key>developerURL</key>
 	<string>http://github.com/rafalbuchner</string>
 	<key>html</key>
-	<false/>
+	<true/>
 	<key>launchAtStartUp</key>
 	<true/>
 	<key>mainScript</key>
 	<string>StemPlowTool.py</string>
 	<key>name</key>
-	<string>StemPlow</string>
+	<string>Stem Plow</string>
 	<key>requiresVersionMajor</key>
 	<string>4</string>
 	<key>requiresVersionMinor</key>
 	<string>2</string>
 	<key>timeStamp</key>
-	<real>1691520813.03672</real>
+	<real>1691535208.7372658</real>
 	<key>version</key>
-	<string>1.220</string>
+	<string>1.221</string>
 </dict>
 </plist>

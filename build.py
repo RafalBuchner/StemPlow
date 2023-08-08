@@ -3,7 +3,7 @@
 import os
 from mojo.extensions import ExtensionBundle
 
-__version__ = "1.220"
+__version__ = "1.221"
 
 def exec_cmd(cmd):
     import subprocess
@@ -15,7 +15,7 @@ def exec_cmd(cmd):
         print(f"issue with cmd\n\t${cmd}")
         print(traceback.format_exc())
 
-
+name = "Stem Plow"
 
 # get current folder
 basePath = os.path.dirname(__file__)
@@ -27,8 +27,8 @@ sourcePath = os.path.join(basePath, 'source')
 libPath = os.path.join(sourcePath, 'code')
 
 # # folder with html files
-# htmlPath = os.path.join(sourcePath, 'documentation')
-htmlPath = None
+htmlPath = os.path.join(sourcePath, 'documentation')
+# htmlPath = None
 
 # # folder with resources (icons etc)
 # resourcesPath = os.path.join(sourcePath, 'resources')
@@ -42,7 +42,7 @@ licensePath = os.path.join(basePath, 'licence.txt')
 pycOnly = False
 
 # name of the compiled extension file
-extensionFile = 'StemPlow.roboFontExt'
+extensionFile = f'{name.replace(" ","")}.roboFontExt'
 
 # path of the compiled extension
 buildPath = os.path.join(basePath, 'build')
@@ -51,8 +51,18 @@ extensionPath = os.path.join(buildPath, extensionFile)
 # initiate the extension builder
 B = ExtensionBundle()
 
+# scripts which should appear in Extensions menu
+B.addToMenu = [
+    {
+        'path' : 'stemPlow/StemPlowSettings.py',
+        'preferredName': 'Settings…',
+        'shortKey' : '',
+    }
+
+]
+
 # name of the extension
-B.name = "StemPlow"
+B.name = name
 
 # name of the developer
 B.developer = 'Rafał Buchner'
@@ -74,21 +84,13 @@ B.launchAtStartUp = True
 B.mainScript = 'StemPlowTool.py'
 
 # does the extension contain html help files?
-B.html = False
+B.html = True
 
 # minimum RoboFont version required for this extension
 B.requiresVersionMajor = '4'
 B.requiresVersionMinor = '2'
 
-# scripts which should appear in Extensions menu
-B.addToMenu = [
-    {
-        'path' : 'StemPlowSettings.py',
-        'preferredName': '↔ Stem Plow Settings',
-        'shortKey' : '',
-    },
 
-]
 
 # license for the extension
 with open(licensePath, encoding="utf-8") as license:

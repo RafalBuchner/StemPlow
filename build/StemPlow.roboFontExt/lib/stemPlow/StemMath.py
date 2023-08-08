@@ -37,7 +37,7 @@ def closestPointAndT_binaryIndexSearch_withSegments(pointOffCurve, segment, *seg
     next_mid_t = curr_mid_t
     curr_right_t = 1
     while found == False:
-        
+
         if count == 12:
             break
         count += 1
@@ -52,7 +52,7 @@ def closestPointAndT_binaryIndexSearch_withSegments(pointOffCurve, segment, *seg
                 minimalDist = distance
                 t = n[1]
 
-        
+
         points1, points2 = splitSegAtT(segment.type, points, 0.5)
 
         if t >= 0.5:
@@ -67,7 +67,7 @@ def closestPointAndT_binaryIndexSearch_withSegments(pointOffCurve, segment, *seg
             next_left_t = curr_left_t
             next_right_t = curr_mid_t
             next_mid_t = interpolation(next_right_t, next_left_t, 0.5)
-        
+
         # combine it later with previous if statement
         # now it is here just because of drawbot functions
         curr_left_t = next_left_t

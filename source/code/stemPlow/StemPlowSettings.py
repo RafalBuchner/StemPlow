@@ -2,7 +2,7 @@ import ezui
 from mojo.events import postEvent
 
 
-from StemPlowSubscriber import (
+from stemPlow.StemPlowSubscriber import (
     internalGetDefault,
     internalSetDefault,
     extensionID

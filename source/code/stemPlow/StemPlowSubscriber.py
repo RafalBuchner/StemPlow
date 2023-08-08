@@ -1,5 +1,5 @@
 import AppKit
-import StemMath
+import stemPlow.StemMath
 from mojo import subscriber
 from mojo import events
 from mojo import tools

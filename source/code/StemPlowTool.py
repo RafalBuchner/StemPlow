@@ -1,2 +1,2 @@
-from StemPlowSubscriber import main
+from stemPlow.StemPlowSubscriber import main
 main()
