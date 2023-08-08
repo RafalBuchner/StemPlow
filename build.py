@@ -1,9 +1,9 @@
-'''build RoboFont CurvatureVisualizator Extension'''
+'''build RoboFont StemPlow Extension'''
 
 import os
 from mojo.extensions import ExtensionBundle
 
-__version__ = "0.5.2"
+__version__ = "1.216"
 
 def exec_cmd(cmd):
     import subprocess
@@ -31,17 +31,18 @@ libPath = os.path.join(sourcePath, 'code')
 htmlPath = None
 
 # # folder with resources (icons etc)
-resourcesPath = os.path.join(sourcePath, 'resources')
+# resourcesPath = os.path.join(sourcePath, 'resources')
+resourcesPath = None
 
 # load license text from file
 # see choosealicense.com for more open-source licenses
-licensePath = os.path.join(basePath, 'license.txt')
+licensePath = os.path.join(basePath, 'licence.txt')
 
 # boolean indicating if only .pyc should be included
 pycOnly = False
 
 # name of the compiled extension file
-extensionFile = 'CurvatureVisualizator.roboFontExt'
+extensionFile = 'StemPlow.roboFontExt'
 
 # path of the compiled extension
 buildPath = os.path.join(basePath, 'build')
@@ -51,7 +52,7 @@ extensionPath = os.path.join(buildPath, extensionFile)
 B = ExtensionBundle()
 
 # name of the extension
-B.name = "CurvatureVisualizator"
+B.name = "StemPlow"
 
 # name of the developer
 B.developer = 'Rafał buchner'
@@ -70,7 +71,7 @@ B.version = __version__
 B.launchAtStartUp = True
 
 # script to be executed when RF starts
-B.mainScript = 'main.py'
+B.mainScript = 'StemPlowTool.py'
 
 # does the extension contain html help files?
 B.html = False
@@ -81,16 +82,12 @@ B.requiresVersionMinor = '2'
 
 # scripts which should appear in Extensions menu
 B.addToMenu = [
-    # {
-    #     'path' : 'curvatureVisualizatorSettings.py',
-    #     'preferredName': 'Curvature Visualizator Settings',
-    #     'shortKey' : '',
-    # },
-    # {
-    #     'path' : 'doSomethingElse.py',
-    #     'preferredName': 'do something else',
-    #     'shortKey' : '',
-    # }
+    {
+        'path' : 'StemPlowSettings.py',
+        'preferredName': '↔ Stem Plow Settings',
+        'shortKey' : '',
+    },
+
 ]
 
 # license for the extension
@@ -103,6 +100,7 @@ with open(licensePath, encoding="utf-8") as license:
 # compile and save the extension bundle
 print('building extension...', end=' ')
 # B.save(extensionPath, libPath=libPath, htmlPath=htmlPath, resourcesPath=resourcesPath, pycOnly=["3.6", "3.7"])
+B.save(extensionPath, libPath=libPath, htmlPath=htmlPath, resourcesPath=resourcesPath)
 B.save(extensionPath, libPath=libPath, htmlPath=htmlPath, resourcesPath=resourcesPath)
 print('done!')
 

@@ -5,6 +5,8 @@
 	<key>addToMenu</key>
 	<array>
 		<dict>
+			<key>nestInSubmenus</key>
+			<true/>
 			<key>path</key>
 			<string>StemPlowSettings.py</string>
 			<key>preferredName</key>
@@ -14,24 +16,22 @@
 		</dict>
 	</array>
 	<key>developer</key>
-	<string>Rafał buchner</string>
+	<string>Rafał Buchner</string>
 	<key>developerURL</key>
-	<string>http://github.com/rafalbuchner</string>
+	<string></string>
 	<key>html</key>
 	<false/>
 	<key>launchAtStartUp</key>
-	<true/>
+	<integer>1</integer>
 	<key>mainScript</key>
 	<string>StemPlowTool.py</string>
 	<key>name</key>
 	<string>StemPlow</string>
 	<key>requiresVersionMajor</key>
 	<string>4</string>
-	<key>requiresVersionMinor</key>
-	<string>2</string>
 	<key>timeStamp</key>
-	<real>1691516272.1473589</real>
+	<real>1689263652.981514</real>
 	<key>version</key>
-	<string>1.216</string>
+	<string>1.215</string>
 </dict>
 </plist>

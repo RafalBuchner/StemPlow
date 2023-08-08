@@ -34,17 +34,17 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         ---
 
         : Text Size:
-        [_123_](÷)                                 @measurementTextSize
+        [_123_](÷)                                @measurementTextSize
 
         : Text Color:
         * ColorWell                                 @textColor
 
         ---
         : Oval Size:
-        [_123_](÷)                                        @measurementOvalSize
+        [_123_](÷)                                @measurementOvalSize
 
         : Line Size:
-        [_123_](÷)                                        @measurementLineSize
+        [_123_](÷)                                @measurementLineSize
 
         : Base Color:
         * ColorWell                                 @mainColor
@@ -103,7 +103,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
                 valueType="number",
                 value=internalGetDefault("measurementOvalSize")
             ),
-            
+
             mainColor=dict(
                 width=colorWellWidth,
                 height=colorWellHeight,
@@ -155,7 +155,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
 
     def measureAgainstSideBearingsCallback(self, sender):
         self.mainCallback(sender)
-    
+
     def showLaserMeasureNamesCallback(self, sender):
         self.mainCallback(sender)
 
@@ -188,7 +188,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         value = sender.get()
 
         existing = internalGetDefault(key)
-        
+
         if existing == value:
             return
         if key == "triggerCharacter":
