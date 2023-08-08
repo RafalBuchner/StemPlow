@@ -34,17 +34,17 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         ---
 
         : Text Size:
-        [_123_](÷)                                @measurementTextSize
+        [_123_](±)                                @measurementTextSize
 
         : Text Color:
         * ColorWell                                 @textColor
 
         ---
         : Oval Size:
-        [_123_](÷)                                @measurementOvalSize
+        [_123_](±)                                @measurementOvalSize
 
         : Line Size:
-        [_123_](÷)                                @measurementLineSize
+        [_123_](±)                                @measurementLineSize
 
         : Base Color:
         * ColorWell                                 @mainColor
