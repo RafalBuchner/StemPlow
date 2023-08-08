@@ -3,7 +3,7 @@
 import os
 from mojo.extensions import ExtensionBundle
 
-__version__ = "1.217"
+__version__ = "1.220"
 
 def exec_cmd(cmd):
     import subprocess
@@ -55,7 +55,7 @@ B = ExtensionBundle()
 B.name = "StemPlow"
 
 # name of the developer
-B.developer = 'Rafał buchner'
+B.developer = 'Rafał Buchner'
 
 # URL of the developer
 B.developerURL = 'http://github.com/rafalbuchner'
@@ -98,7 +98,7 @@ with open(licensePath, encoding="utf-8") as license:
 # B.expireDate = '2019-12-31'
 
 # compile and save the extension bundle
-print('building extension...', end=' ')
+print(f'building extension {B.name} version {__version__}...', end=' ')
 # B.save(extensionPath, libPath=libPath, htmlPath=htmlPath, resourcesPath=resourcesPath, pycOnly=["3.6", "3.7"])
 B.save(extensionPath, libPath=libPath, htmlPath=htmlPath, resourcesPath=resourcesPath)
 B.save(extensionPath, libPath=libPath, htmlPath=htmlPath, resourcesPath=resourcesPath)

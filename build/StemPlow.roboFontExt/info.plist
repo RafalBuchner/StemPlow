@@ -14,7 +14,7 @@
 		</dict>
 	</array>
 	<key>developer</key>
-	<string>Rafał buchner</string>
+	<string>Rafał Buchner</string>
 	<key>developerURL</key>
 	<string>http://github.com/rafalbuchner</string>
 	<key>html</key>
@@ -30,8 +30,8 @@
 	<key>requiresVersionMinor</key>
 	<string>2</string>
 	<key>timeStamp</key>
-	<real>1691519351.7755389</real>
+	<real>1691520813.03672</real>
 	<key>version</key>
-	<string>1.217</string>
+	<string>1.220</string>
 </dict>
 </plist>

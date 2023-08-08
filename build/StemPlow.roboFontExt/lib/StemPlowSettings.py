@@ -15,15 +15,15 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         = TwoColumnForm
 
         : Measure:
-        [ ] against Components                      @measureAgainstComponents
+        [ ] against Components                              @measureAgainstComponents
         :
-        [ ] against SideBearings                    @measureAgainstSideBearings
+        [ ] against SideBearings                            @measureAgainstSideBearings
         :
-        [ ] display Named Values from Laser Measure @showLaserMeasureNames
+        [ ] display Named Values from Laser Measure      @showLaserMeasureNames
         :
-        [ ] always                                  @measureAlways
+        [ ] always                                            @measureAlways
         : Trigger behaviour:
-        [ ] anchor guide to the outline             @useShortcutToMoveWhileAlways
+        [ ] anchor guide to the outline                     @useShortcutToMoveWhileAlways
 
 
         ---
@@ -103,7 +103,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
                 valueType="number",
                 value=internalGetDefault("measurementOvalSize")
             ),
-            
+
             mainColor=dict(
                 width=colorWellWidth,
                 height=colorWellHeight,
@@ -155,7 +155,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
 
     def measureAgainstSideBearingsCallback(self, sender):
         self.mainCallback(sender)
-    
+
     def showLaserMeasureNamesCallback(self, sender):
         self.mainCallback(sender)
 
@@ -188,7 +188,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         value = sender.get()
 
         existing = internalGetDefault(key)
-        
+
         if existing == value:
             return
         if key == "triggerCharacter":

@@ -83,6 +83,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
     debug = __DEBUG__
     wantsMeasurements = False
+    measureAlwaysVisible = True
 
     @property
     def performAnchoring(self):
@@ -199,7 +200,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.wantsMeasurements = False
 
         self.stemPlowRuler.loadNamedMeasurements(self.getFont())
-
+        self.measureAlwaysVisible = self.measureAlways
 
 
 
@@ -209,9 +210,12 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.foregroundContainer.clearSublayers()
         events.removeObserver(self, extensionID + ".defaultsChanged")
 
-    def hideLayers(self):
+    def _hideLayers(self):
         self.backgroundContainer.setVisible(False)
         self.foregroundContainer.setVisible(False)
+
+    def hideLayersAndClearData(self):
+        self._hideLayers()
         self.clearData()
 
     def showLayers(self):
@@ -248,7 +252,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
         if self.measureAlways:
             self.showLayers()
         else:
-            self.hideLayers()
+            self.hideLayersAndClearData()
 
 
     closestPointOnPath = None
@@ -266,7 +270,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
         if self.measureAlways:
             self.showLayers()
         else:
-            self.hideLayers()
+            self.hideLayersAndClearData()
 
         if self.performAnchoring:
             self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info['glyph'])
@@ -274,6 +278,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
     def glyphEditorDidSetGlyph(self, info):
         if self.performAnchoring:
             self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info['glyph'])
+
 
     def glyphEditorDidKeyDown(self, info):
         isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
@@ -284,6 +289,16 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
         elif not isTriggerCharPressed and not self.measureAlways:
             self.wantsMeasurements = False
+
+        elif self.measureAlways and isTriggerCharPressed and not self.performAnchoring:
+            self.measureAlwaysVisible = not self.measureAlwaysVisible
+
+            if self.measureAlwaysVisible:
+                self.wantsMeasurements = True
+                self.showLayers()
+            else:
+                self._hideLayers()
+                self.wantsMeasurements = True
 
         if self.performAnchoring:
             if isTriggerCharPressed:
@@ -303,7 +318,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
     def glyphEditorDidKeyUp(self, info):
         isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
         if not self.measureAlways:
-            self.hideLayers()
+            self.hideLayersAndClearData()
         else:
             # getting glyph and current mouse location
             if self.useShortcutToMoveWhileAlways and isTriggerCharPressed and not self.stemPlowRuler.anchored:
@@ -341,7 +356,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
     def glyphEditorDidMouseDown(self, info):
         if not self.measureAlways:
-            self.hideLayers()
+            self.hideLayersAndClearData()
 
     def glyphEditorDidMouseMove(self, info):
         if not self.wantsMeasurements:
