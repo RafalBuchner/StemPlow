@@ -89,6 +89,18 @@ def getCurrentPosition(info):
     return (cursorPosition.x, cursorPosition.y)
 
 
+def copyDecomposedAndOverlaplessGlyph(srcGlyph: RGlyph) -> RGlyph:
+    # couldn't help myself with the name, and the comment about the name
+    dstGlyph = RGlyph()
+    dstGlyph.width = srcGlyph.width
+    dstPen = dstGlyph.getPointPen()
+    decomposePen = DecomposePointPen(srcGlyph.font, dstPen)
+    srcGlyph.drawPoints(decomposePen)
+    dstGlyph.removeOverlap()
+
+    return dstGlyph
+
+
 class StemPlowSubscriber(subscriber.Subscriber):
 
     debug = __DEBUG__
@@ -287,6 +299,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
     visibleP1 = False
     visibleP2 = False
     position = None
+    currentGlyphReference: str | None = None
 
     def glyphEditorDidOpen(self, info):
         if self.measureAlways:
@@ -297,9 +310,12 @@ class StemPlowSubscriber(subscriber.Subscriber):
         if self.performAnchoring:
             self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info["glyph"])
 
-    def glyphEditorDidSetGlyph(self, info):
-        if self.performAnchoring:
-            self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info["glyph"])
+    def roboFontDidSwitchCurrentGlyph(self, info):
+        if self.currentGlyphReference != info["glyph"].name:
+            print("RUN")
+            if self.performAnchoring:
+                self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info["glyph"])
+            self.currentGlyphReference = info["glyph"].name
 
     def glyphEditorDidKeyDown(self, info):
         isTriggerCharPressed = (
@@ -548,17 +564,24 @@ class StemPlowRuler:
         self.anchored = None
 
     def anchorRulerToGlyphWithoutCursor(self, glyph):
-        # glyph = info["glyph"]
-        if len(glyph.contours) > 0 and glyph.lib.get(self.keyId) is None:
+        if glyph.lib.get(self.keyId) is None:
             glyph.lib[self.keyId] = dict(contour_index=0, segment_index=0, anchor_t=0)
         self.anchored = True
 
     def anchorRuler(self, info):
         glyph = info["glyph"]
+        if len(glyph.contours) == 0:
+            # for glyphs with only components
+            glyph = copyDecomposedAndOverlaplessGlyph(glyph)
+
         _, contour_index, segment_index, anchor_t = (
             self.calculateDetailsForNearestPointOnCurve(getCurrentPosition(info), glyph)
         )
-
+        if None in (contour_index, segment_index, anchor_t):
+            if self.keyId in glyph.lib.keys():
+                del glyph.lib[self.keyId]
+            self.anchored = False
+            return
         glyph.lib[self.keyId] = dict(
             contour_index=contour_index, segment_index=segment_index, anchor_t=anchor_t
         )
@@ -678,6 +701,9 @@ class StemPlowRuler:
                 distance = StemMath.lenghtAB(cursorPosition, point)
                 distances.append(distance)
 
+            if not distances:
+                return None, None, None, None
+
             indexOfClosestPoint = distances.index(min(distances))
             closestPointOnPathRef = closestPointsRef[indexOfClosestPoint]
             closestPoint, contour_index, segment_index, t = closestPointOnPathRef
@@ -755,21 +781,10 @@ class StemPlowRuler:
     currentMeasurement2 = None
 
     def getThicknessData(self, position, glyph, method):
-        def copyDecomposed(srcGlyph: RGlyph) -> RGlyph:
-            dstGlyph = RGlyph()
-            dstGlyph.width = srcGlyph.width
-            dstPen = dstGlyph.getPointPen()
-            decomposePen = DecomposePointPen(glyph.font, dstPen)
-            srcGlyph.drawPoints(decomposePen)
-            dstGlyph.removeOverlap()
-
-            return dstGlyph
 
         if len(glyph.contours) == 0:
-            glyph = copyDecomposed(glyph)
-        # guideline1, guideline2, closestPointOnPath = self.getGuidesAndClosestPoint(
-        #     position, glyph
-        # )
+            glyph = copyDecomposedAndOverlaplessGlyph(glyph)
+
         guideline1, guideline2, closestPointOnPath = method(position, glyph)
 
         textBoxCenter1 = None
@@ -780,7 +795,6 @@ class StemPlowRuler:
         nearestP2 = closestPointOnPath
         thicknessValue2 = 0
 
-        # if StemMath.lenghtAB(position, closestPointOnPath) < 77:
         intersectionAB1 = tools.IntersectGlyphWithLine(
             glyph,
             guideline1,
