@@ -131,6 +131,7 @@ def calculateGuidesBasedOnT(
     returnt two lines, every line has two points
     every point is represented as a touple with x, y values
     """
+
     closestPointx, closestPointy = calcSeg(t, *points)
 
     guide1, guide2 = getPerpedicularLineToTangent(segType, t, *points)
@@ -302,7 +303,7 @@ def splitLineAtT(
 
 
 def calcSeg(t: Number, *points: Sequence[Sequence[Number]]) -> Sequence[Number]:
-    assert isinstance(t, float), "calcSeg ERROR: t is not a float"
+    assert isinstance(t, Number), "calcSeg ERROR: t is not a number"
     if len(points) == 2:
         a, b = points
         point = calcLine(t, a, b)
@@ -368,7 +369,7 @@ def angle(A: Sequence[Number], B: Sequence[Number]) -> Number:
 
 def calcBezier(t: Number, *pointList: Sequence[Sequence[Number]]) -> Sequence[Number]:
     """returns coordinates for factor called "t"(from 0 to 1). Based on cubic bezier formula."""
-    assert len(pointList) == 4 and isinstance(t, float)
+    assert len(pointList) == 4 and isinstance(t, Number)
     p1x, p1y = pointList[0]
     p2x, p2y = pointList[1]
     p3x, p3y = pointList[2]
@@ -394,7 +395,7 @@ def calcQbezier(t: Number, *pointList: Sequence[Sequence[Number]]) -> Sequence[N
     """returns coordinates for factor called "t"(from 0 to 1). Based on Quadratic Bezier formula."""
 
     def calcQuadraticBezier(t: float, *pointList: Sequence[Sequence[Number]]):
-        assert len(pointList) == 3 and isinstance(t, float)
+        assert len(pointList) == 3 and isinstance(t, Number)
         p1x, p1y = pointList[0]
         p2x, p2y = pointList[1]
         p3x, p3y = pointList[2]
@@ -402,7 +403,7 @@ def calcQbezier(t: Number, *pointList: Sequence[Sequence[Number]]) -> Sequence[N
         y = (1 - t) ** 2 * p1y + 2 * (1 - t) * t * p2y + t**2 * p3y
         return x, y
 
-    assert len(pointList) == 4 and isinstance(t, float)
+    assert len(pointList) == 4 and isinstance(t, Number)
     p1 = pointList[0]
     h1 = pointList[1]
     h2 = pointList[2]
@@ -418,7 +419,7 @@ def calcQbezier(t: Number, *pointList: Sequence[Sequence[Number]]) -> Sequence[N
 
 def calcLine(t: float, *pointList: Sequence[Sequence[Number]]) -> Sequence[Number]:
     """returns coordinates for factor called "t"(from 0 to 1). Based on cubic bezier formula."""
-    assert len(pointList) == 2 and isinstance(t, float)
+    assert len(pointList) == 2 and isinstance(t, Number)
 
     p1x, p1y = pointList[0]
     p2x, p2y = pointList[1]
@@ -477,7 +478,7 @@ def derivativeQBezier(
 
         return summaX, summaY
 
-    assert len(pointList) == 4 and isinstance(t, float)
+    assert len(pointList) == 4 and isinstance(t, Number)
     p1 = pointList[0]
     h1 = pointList[1]
     h2 = pointList[2]
