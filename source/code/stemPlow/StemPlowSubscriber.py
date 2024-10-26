@@ -1,14 +1,16 @@
-import AppKit
+import AppKit  # type: ignore
 import stemPlow.StemMath as StemMath
-from mojo import subscriber
-from mojo import events
-from mojo import tools
-from mojo.extensions import (
+from fontParts.world import RGlyph
+from mojo import subscriber  # type: ignore
+from mojo import events  # type: ignore
+from mojo import tools  # type: ignore
+from mojo.extensions import (  # type: ignore
     registerExtensionDefaults,
     getExtensionDefault,
     setExtensionDefault,
-    removeExtensionDefault,
 )
+from mojo.pens import DecomposePointPen  # type: ignore
+from icecream import ic
 
 ## DEBUGGING SETTINGS:
 if AppKit.NSUserName() == "rafalbuchner":
@@ -392,20 +394,22 @@ class StemPlowSubscriber(subscriber.Subscriber):
             return
         cursorPosition = tuple(info["locationInGlyph"])
 
-        (
-            self.textBoxCenter1,
-            self.measurementValue1,
-            self.nearestP1,
-            self.textBoxCenter2,
-            self.measurementValue2,
-            self.nearestP2,
-            self.closestPointOnPath,
-        ) = self.stemPlowRuler.getThicknessData(
+        thicknessData = self.stemPlowRuler.getThicknessData(
             cursorPosition, glyph, self.stemPlowRuler.getGuidesAndClosestPoint
         )
+        if thicknessData:
+            (
+                self.textBoxCenter1,
+                self.measurementValue1,
+                self.nearestP1,
+                self.textBoxCenter2,
+                self.measurementValue2,
+                self.nearestP2,
+                self.closestPointOnPath,
+            ) = thicknessData
 
-        self.updateText()
-        self.updateLinesAndOvals()
+            self.updateText()
+            self.updateLinesAndOvals()
 
     def glyphEditorWillOpen(self, info):
         if self.measureAlways:
@@ -751,12 +755,20 @@ class StemPlowRuler:
     currentMeasurement2 = None
 
     def getThicknessData(self, position, glyph, method):
-        if len(glyph.contours) == 0:
-            return
+        def copyDecomposedAndOverlaplessGlyph(srcGlyph: RGlyph) -> RGlyph:
+            # couldn't help myself with the name, and the comment about the name
+            dstGlyph = RGlyph()
+            dstGlyph.width = srcGlyph.width
+            dstPen = dstGlyph.getPointPen()
+            decomposePen = DecomposePointPen(glyph.font, dstPen)
+            srcGlyph.drawPoints(decomposePen)
+            dstGlyph.removeOverlap()
 
-        # guideline1, guideline2, closestPointOnPath = self.getGuidesAndClosestPoint(
-        #     position, glyph
-        # )
+            return dstGlyph
+
+        if len(glyph.contours) == 0:
+            glyph = copyDecomposedAndOverlaplessGlyph(glyph)
+
         guideline1, guideline2, closestPointOnPath = method(position, glyph)
 
         textBoxCenter1 = None
@@ -767,7 +779,6 @@ class StemPlowRuler:
         nearestP2 = closestPointOnPath
         thicknessValue2 = 0
 
-        # if StemMath.lenghtAB(position, closestPointOnPath) < 77:
         intersectionAB1 = tools.IntersectGlyphWithLine(
             glyph,
             guideline1,
@@ -908,8 +919,10 @@ except AssertionError:
 
 
 def main():
-    # if AppKit.NSUserName() == "rafalbuchner":
-    #     for key in defaults.keys():
-    #         removeExtensionDefault(key)
-    #     registerExtensionDefaults(defaults)
+    from mojo.extensions import removeExtensionDefault
+
+    if AppKit.NSUserName() == "rafalbuchner":
+        for key in defaults.keys():
+            (key)
+        registerExtensionDefaults(defaults)
     subscriber.registerGlyphEditorSubscriber(StemPlowSubscriber)

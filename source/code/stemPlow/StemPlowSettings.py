@@ -1,12 +1,13 @@
-import ezui
-from mojo.events import postEvent
+import ezui  # type: ignore
+from mojo.events import postEvent  # type: ignore
 
 
 from stemPlow.StemPlowSubscriber import (
     internalGetDefault,
     internalSetDefault,
-    extensionID
+    extensionID,
 )
+
 
 class _StemPlowSettingsWindowController(ezui.WindowController):
 
@@ -60,10 +61,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         colorWellHeight = 20
         numberEntryWidth = 75
         descriptionData = dict(
-            content=dict(
-                titleColumnWidth=125,
-                itemColumnWidth=265
-            ),
+            content=dict(titleColumnWidth=125, itemColumnWidth=265),
             measureAgainstComponents=dict(
                 value=internalGetDefault("measureAgainstComponents")
             ),
@@ -73,58 +71,54 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
             showLaserMeasureNames=dict(
                 value=internalGetDefault("showLaserMeasureNames")
             ),
-            measureAlways=dict(
-                value=internalGetDefault("measureAlways")
-            ),
+            measureAlways=dict(value=internalGetDefault("measureAlways")),
             useShortcutToMoveWhileAlways=dict(
                 value=internalGetDefault("useShortcutToMoveWhileAlways")
             ),
             triggerCharacter=dict(
-                width=20,
-                value=internalGetDefault("triggerCharacter")
+                width=20, value=internalGetDefault("triggerCharacter")
             ),
             measurementTextSize=dict(
                 width=numberEntryWidth,
                 valueType="number",
-                value=internalGetDefault("measurementTextSize")
+                value=internalGetDefault("measurementTextSize"),
             ),
             textColor=dict(
                 width=colorWellWidth,
                 height=colorWellHeight,
-                color=tuple(internalGetDefault("textColor"))
+                color=tuple(internalGetDefault("textColor")),
             ),
             measurementLineSize=dict(
                 width=numberEntryWidth,
                 valueType="number",
-                value=internalGetDefault("measurementLineSize")
+                value=internalGetDefault("measurementLineSize"),
             ),
             measurementOvalSize=dict(
                 width=numberEntryWidth,
                 valueType="number",
-                value=internalGetDefault("measurementOvalSize")
+                value=internalGetDefault("measurementOvalSize"),
             ),
-
             mainColor=dict(
                 width=colorWellWidth,
                 height=colorWellHeight,
-                color=tuple(internalGetDefault("mainColor"))
+                color=tuple(internalGetDefault("mainColor")),
             ),
             lineColor=dict(
                 width=colorWellWidth,
                 height=colorWellHeight,
-                color=tuple(internalGetDefault("lineColor"))
+                color=tuple(internalGetDefault("lineColor")),
             ),
             ovalColor=dict(
                 width=colorWellWidth,
                 height=colorWellHeight,
-                color=tuple(internalGetDefault("ovalColor"))
-            )
+                color=tuple(internalGetDefault("ovalColor")),
+            ),
         )
         self.w = ezui.EZWindow(
             title="Stem Plow Settings",
             content=content,
             descriptionData=descriptionData,
-            controller=self
+            controller=self,
         )
         self.initialUiSetting()
 
@@ -195,16 +189,14 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
             if len(sender.get()) != 1:
                 return
         internalSetDefault(key, value)
-        postEvent(
-            extensionID + ".defaultsChanged"
-        )
-
+        postEvent(extensionID + ".defaultsChanged")
 
 
 note = """
 The settings window is only available in
 RoboFont 4.2+
 """.strip()
+
 
 def StemPlowSettingsWindowController(*args, **kwargs):
     from mojo import roboFont
@@ -220,6 +212,7 @@ def StemPlowSettingsWindowController(*args, **kwargs):
         print(note)
     else:
         _StemPlowSettingsWindowController(*args, **kwargs)
+
 
 if __name__ == "__main__":
     StemPlowSettingsWindowController()
