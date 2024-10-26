@@ -10,12 +10,11 @@ from fontParts.base import BaseSegment
 import math
 from typing import Tuple, List
 from numbers import Number
-from stemPlow.geometricTypes import Point, SegmentPoints
 
 
 def getClosestInfo(
-    cursorPoint: Point, segment: BaseSegment, *points
-) -> Tuple[Point, int, int, SegmentPoints, Number]:
+    cursorPoint: Sequence[Number], segment: BaseSegment, *points
+) -> Tuple[Sequence[Number], int, int, Sequence[Sequence[Number]], Number]:
     """
     returns info about closest point on curve
     """
@@ -30,12 +29,12 @@ def getClosestInfo(
 
 
 def closestPointAndT_binaryIndexSearch_withSegments(
-    pointOffCurve: Point,
+    pointOffCurve: Sequence[Number],
     segment: BaseSegment,
-    *segPoints: SegmentPoints,
+    *segPoints: Sequence[Sequence[Number]],
 ) -> Tuple[
-    SegmentPoints,
-    Tuple[int, int, SegmentPoints, Number],
+    Sequence[Sequence[Number]],
+    Tuple[int, int, Sequence[Sequence[Number]], Number],
 ]:
 
     curveDiv = 12
@@ -86,17 +85,12 @@ def closestPointAndT_binaryIndexSearch_withSegments(
 
 
 def closestPointAndT_binaryIndexSearch(
-    pointOffCurve: Point,
+    pointOffCurve: Sequence[Number],
     segType: str,
-    *points: SegmentPoints,
-) -> SegmentPoints:
-    """Returns returns the curve, which is segment cutted from the given curve."""
+    *points: Sequence[Sequence[Number]],
+) -> Sequence[Sequence[Number]]:
+    """Returns the curve, which is segment cut from the given curve."""
 
-    ### Quicker?
-    # if segType != 'qcurve':
-    #     curveDiv = 3
-    # else:
-    #     curveDiv = 12
     curveDiv = 12
     found = False
     count = 0
@@ -126,9 +120,11 @@ def closestPointAndT_binaryIndexSearch(
     return points
 
 
-def calculateGuidesBasedOnT(t: float, segType: str, *points: SegmentPoints) -> Tuple[
-    SegmentPoints,
-    SegmentPoints,
+def calculateGuidesBasedOnT(
+    t: float, segType: str, *points: Sequence[Sequence[Number]]
+) -> Tuple[
+    Sequence[Sequence[Number]],
+    Sequence[Sequence[Number]],
 ]:
     """
     calculate guidelines for stem thickness
@@ -162,12 +158,12 @@ def calculateGuidesBasedOnT(t: float, segType: str, *points: SegmentPoints) -> T
 
 
 def stemThicnkessGuidelines(
-    cursorPoint: Point,
+    cursorPoint: Sequence[Number],
     segType: str,
-    *points: SegmentPoints,
+    *points: Sequence[Sequence[Number]],
 ) -> Tuple[
-    SegmentPoints,
-    SegmentPoints,
+    Sequence[Sequence[Number]],
+    Sequence[Sequence[Number]],
 ]:
     """
     calculate guidelines for stem thickness
@@ -180,8 +176,8 @@ def stemThicnkessGuidelines(
 
 
 def getLut(
-    segType: str, accuracy: int = 12, *points: SegmentPoints
-) -> dict[tuple[int, Number], Point]:
+    segType: str, accuracy: int = 12, *points: Sequence[Sequence[Number]]
+) -> dict[tuple[int, Number], Sequence[Number]]:
     """Returns Look Up Table, which contains pointsOnPath for calcBezier/calcLine,
     if getT=True then returns table with points and their factors"""
     lut_table = {}
@@ -202,7 +198,9 @@ def getLut(
     return lut_table
 
 
-def sortPointsDistances(myPoint: Point, points: SegmentPoints) -> SegmentPoints:
+def sortPointsDistances(
+    myPoint: Sequence[Number], points: Sequence[Sequence[Number]]
+) -> Sequence[Sequence[Number]]:
     def _sorter(point):
         return lenghtAB(myPoint, point)
 
@@ -237,8 +235,8 @@ def bs(searchFor, array):
 
 
 def splitSegAtT(
-    segType: str, points: SegmentPoints, *t: tuple[Number]
-) -> Sequence[SegmentPoints]:
+    segType: str, points: Sequence[Sequence[Number]], *t: tuple[Number]
+) -> Sequence[Sequence[Sequence[Number]]]:
     if len(points) == 2:
         assert isinstance(t[0], float), "splitSegAtT ERROR: t is not a float"
         a, b = points
@@ -254,12 +252,12 @@ def splitSegAtT(
 
 
 def splitQatT(
-    p1: Point,
-    h1: Point,
-    h2: Point,
-    p2: Point,
+    p1: Sequence[Number],
+    h1: Sequence[Number],
+    h2: Sequence[Number],
+    p2: Sequence[Number],
     t: Number,
-) -> Sequence[SegmentPoints]:  ########WIP NIE SĄDZĘ ABY MOJ POMYSL DZIALAL
+) -> Sequence[Sequence[Sequence[Number]]]:  ########WIP NIE SĄDZĘ ABY MOJ POMYSL DZIALAL
     """divides ROBOFONT quadratic bezier paths (wich are strange, stored as pairs of two curves) into two, t factor here is only for having consistency between this version and cubic. This factor should be 0.5"""
     c = calcLine(0.5, h1, h2)
     split_1 = splitQuadraticAtT(p1, h1, c, t)
@@ -270,10 +268,10 @@ def splitQatT(
 
 
 def splitLineAtT(
-    a: SegmentPoints,
-    b: SegmentPoints,
+    a: Sequence[Sequence[Number]],
+    b: Sequence[Sequence[Number]],
     *ts: tuple[Number],
-) -> SegmentPoints:
+) -> Sequence[Sequence[Number]]:
     """Splits line into two at given t-factors (where 1>t>0)
     sort t-factors before using it1"""
     ### very bad code
@@ -303,7 +301,7 @@ def splitLineAtT(
     return lines
 
 
-def calcSeg(t: Number, *points: SegmentPoints) -> Point:
+def calcSeg(t: Number, *points: Sequence[Sequence[Number]]) -> Sequence[Number]:
     assert isinstance(t, float), "calcSeg ERROR: t is not a float"
     if len(points) == 2:
         a, b = points
@@ -315,7 +313,7 @@ def calcSeg(t: Number, *points: SegmentPoints) -> Point:
     return point
 
 
-def lenghtAB(A: Point, B: Point) -> Number:
+def lenghtAB(A: Sequence[Number], B: Sequence[Number]) -> Number:
     """Returns distance value between two points: A and B"""
     bx, by = B
     ax, ay = A
@@ -329,7 +327,9 @@ def lenghtAB(A: Point, B: Point) -> Number:
         return 0
 
 
-def rotatePoint(P: Point, angle: Number, originPoint: Point) -> Point:
+def rotatePoint(
+    P: Sequence[Number], angle: Number, originPoint: Sequence[Number]
+) -> Sequence[Number]:
     """Rotates x/y around x_orig/y_orig by angle and returns result as [x,y]."""
     alfa = math.radians(angle)
     px, py = P
@@ -349,7 +349,7 @@ def rotatePoint(P: Point, angle: Number, originPoint: Point) -> Point:
     return x, y
 
 
-def angle(A: Point, B: Point) -> Number:
+def angle(A: Sequence[Number], B: Sequence[Number]) -> Number:
     """returns angle between line AB and axis x"""
     ax, ay = A
     bx, by = B
@@ -366,7 +366,7 @@ def angle(A: Point, B: Point) -> Number:
     return angle
 
 
-def calcBezier(t: Number, *pointList: SegmentPoints) -> Point:
+def calcBezier(t: Number, *pointList: Sequence[Sequence[Number]]) -> Sequence[Number]:
     """returns coordinates for factor called "t"(from 0 to 1). Based on cubic bezier formula."""
     assert len(pointList) == 4 and isinstance(t, float)
     p1x, p1y = pointList[0]
@@ -390,10 +390,10 @@ def calcBezier(t: Number, *pointList: SegmentPoints) -> Point:
     return x, y
 
 
-def calcQbezier(t: Number, *pointList: SegmentPoints) -> Point:
+def calcQbezier(t: Number, *pointList: Sequence[Sequence[Number]]) -> Sequence[Number]:
     """returns coordinates for factor called "t"(from 0 to 1). Based on Quadratic Bezier formula."""
 
-    def calcQuadraticBezier(t: float, *pointList: SegmentPoints):
+    def calcQuadraticBezier(t: float, *pointList: Sequence[Sequence[Number]]):
         assert len(pointList) == 3 and isinstance(t, float)
         p1x, p1y = pointList[0]
         p2x, p2y = pointList[1]
@@ -416,7 +416,7 @@ def calcQbezier(t: Number, *pointList: SegmentPoints) -> Point:
         return calcQuadraticBezier(t_segment, p2, h2, c)
 
 
-def calcLine(t: float, *pointList: SegmentPoints) -> Point:
+def calcLine(t: float, *pointList: Sequence[Sequence[Number]]) -> Sequence[Number]:
     """returns coordinates for factor called "t"(from 0 to 1). Based on cubic bezier formula."""
     assert len(pointList) == 2 and isinstance(t, float)
 
@@ -435,7 +435,9 @@ def interpolation(v1, v2, t):
     return vt
 
 
-def derivativeBezier(t: float, *pointList: SegmentPoints) -> Point:
+def derivativeBezier(
+    t: float, *pointList: Sequence[Sequence[Number]]
+) -> Sequence[Number]:
     """calculates derivative values for given control points and current t-factor"""
     ### http://www.idav.ucdavis.edu/education/CAGDNotes/Quadratic-Bezier-Curves.pdf ### Quadratic
     p1x, p1y = pointList[0]
@@ -459,8 +461,12 @@ def derivativeBezier(t: float, *pointList: SegmentPoints) -> Point:
     return summaX, summaY
 
 
-def derivativeQBezier(t: float, *pointList: SegmentPoints) -> Point:
-    def derivativeQuadraticBezier(t: float, *pointList: SegmentPoints) -> Point:
+def derivativeQBezier(
+    t: float, *pointList: Sequence[Sequence[Number]]
+) -> Sequence[Number]:
+    def derivativeQuadraticBezier(
+        t: float, *pointList: Sequence[Sequence[Number]]
+    ) -> Sequence[Number]:
         """calculates derivative values for given control points and current t-factor"""
         p1x, p1y = pointList[0]
         p2x, p2y = pointList[1]
@@ -485,7 +491,9 @@ def derivativeQBezier(t: float, *pointList: SegmentPoints) -> Point:
         return derivativeQuadraticBezier(t_segment, p2, h2, c)
 
 
-def calculateTangentAngle(segType: str, t: float, *points: SegmentPoints) -> Number:
+def calculateTangentAngle(
+    segType: str, t: float, *points: Sequence[Sequence[Number]]
+) -> Number:
     """Calculates tangent angle for curve's/lines's current t-factor"""
     if len(points) == 4 and segType != "qcurve":
         xB, yB = derivativeBezier(t, *points)
@@ -498,8 +506,8 @@ def calculateTangentAngle(segType: str, t: float, *points: SegmentPoints) -> Num
 
 
 def getPerpedicularLineToTangent(
-    segType: str, t: float, *points: SegmentPoints
-) -> Tuple[SegmentPoints, SegmentPoints]:
+    segType: str, t: float, *points: Sequence[Sequence[Number]]
+) -> Tuple[Sequence[Sequence[Number]], Sequence[Sequence[Number]]]:
     """Calculates 2 perpedicular lines to curve's/line's tangent angle with current t-factor. It places it in the position 00
     returnt two lines, every line has two points
     every point is represented as a touple with x, y values.

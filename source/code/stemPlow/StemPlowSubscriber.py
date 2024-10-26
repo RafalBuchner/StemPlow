@@ -18,17 +18,21 @@ else:
 
 if __DEBUG__:
     import traceback
+
+
 def debugFunctionNestingChain(additionalData=""):
     if __DEBUG__:
         limit = 30
         stack = traceback.extract_stack(limit=limit)
-        print("="*50)
+        print("=" * 50)
         print(f"depth: {len(stack)}")
         for i, f in enumerate(stack):
-            if i == len(stack)-1:
+            if i == len(stack) - 1:
                 break
             print(f"{' '+'  '*i}{f.name} at {f.lineno:03d} ({additionalData})")
         print()
+
+
 ## DEBUGGING SETTINGS:
 
 extensionID = "com.rafalbuchner.StemPlow"
@@ -53,8 +57,10 @@ defaults = {
 
 registerExtensionDefaults(defaults)
 
+
 def formatNames(*args):
     return "\n".join(*args)
+
 
 def internalGetDefault(key):
     key = extensionKeyStub + key
@@ -73,11 +79,13 @@ def nearestPointFromList(myPoint, points):
     points = sorted(points, key=_sorter)
     return points
 
+
 def getCurrentPosition(info):
     glyphView = info["glyphEditor"].getGlyphView()
     locationInView = glyphView._getMousePosition()
     cursorPosition = glyphView._converPointFromViewToGlyphSpace(locationInView)
     return (cursorPosition.x, cursorPosition.y)
+
 
 class StemPlowSubscriber(subscriber.Subscriber):
 
@@ -88,7 +96,6 @@ class StemPlowSubscriber(subscriber.Subscriber):
     @property
     def performAnchoring(self):
         return self.useShortcutToMoveWhileAlways and self.measureAlways
-
 
     def build(self):
         self.stemPlowRuler = StemPlowRuler()
@@ -109,7 +116,6 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
         # text
 
-
         self.text1Layer = self.fgBaseLayer.appendTextLineSublayer(
             visible=False, name="measurementValue1"
         )
@@ -125,7 +131,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
         # geometry
 
-        self.lineLayer   = self.bgBaseLayer.appendLineSublayer()
+        self.lineLayer = self.bgBaseLayer.appendLineSublayer()
         self.oval_ALayer = self.bgBaseLayer.appendSymbolSublayer()
         self.oval_BLayer = self.fgBaseLayer.appendSymbolSublayer()
         self.oval_CLayer = self.bgBaseLayer.appendSymbolSublayer()
@@ -152,8 +158,12 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
         self.triggerCharacter = internalGetDefault("triggerCharacter")
         self.measureAlways = bool(internalGetDefault("measureAlways"))
-        self.useShortcutToMoveWhileAlways = bool(internalGetDefault("useShortcutToMoveWhileAlways"))
-        self.measureAgainstComponents = bool(internalGetDefault("measureAgainstComponents"))
+        self.useShortcutToMoveWhileAlways = bool(
+            internalGetDefault("useShortcutToMoveWhileAlways")
+        )
+        self.measureAgainstComponents = bool(
+            internalGetDefault("measureAgainstComponents")
+        )
         self.showLaserMeasureNames = bool(internalGetDefault("showLaserMeasureNames"))
         self.measurementOvalSize = internalGetDefault("measurementOvalSize")
         measurementLineSize = internalGetDefault("measurementLineSize")
@@ -168,42 +178,53 @@ class StemPlowSubscriber(subscriber.Subscriber):
             backgroundColor=mainColor,
             fillColor=textColor,
             padding=(6, 1),
-            cornerRadius=textSize*0.8,
+            cornerRadius=textSize * 0.8,
             horizontalAlignment="center",
             verticalAlignment="center",
             pointSize=textSize,
             weight="bold",
-            figureStyle="tabular"
+            figureStyle="tabular",
         )
-        ovalAttributes = dict(size=(self.measurementOvalSize,self.measurementOvalSize), fillColor=ovalColor, name="oval")
+        ovalAttributes = dict(
+            size=(self.measurementOvalSize, self.measurementOvalSize),
+            fillColor=ovalColor,
+            name="oval",
+        )
 
         self.lineLayer.setPropertiesByName(lineAttributes)
         self.text1Layer.setPropertiesByName(textAttributes)
         self.text2Layer.setPropertiesByName(textAttributes)
         self.namedValues1Layer.setPropertiesByName(textAttributes)
         self.namedValues2Layer.setPropertiesByName(textAttributes)
-        self.namedValues1Layer.setOffset((0,-textSize-5))
-        self.namedValues2Layer.setOffset((0,-textSize-5))
+        self.namedValues1Layer.setOffset((0, -textSize - 5))
+        self.namedValues2Layer.setOffset((0, -textSize - 5))
         self.namedValues1Layer.setVerticalAlignment("top")
         self.namedValues2Layer.setVerticalAlignment("top")
 
         for oval in [self.oval_ALayer, self.oval_BLayer, self.oval_CLayer]:
             oval.setImageSettings(ovalAttributes)
 
-        self.oval_AnchorIndicatorLayer.setImageSettings(dict(size=(self.measurementOvalSize+measurementLineSize*5,self.measurementOvalSize+measurementLineSize*5), fillColor=None,strokeColor=ovalColor, strokeWidth=measurementLineSize, name="oval"))
+        self.oval_AnchorIndicatorLayer.setImageSettings(
+            dict(
+                size=(
+                    self.measurementOvalSize + measurementLineSize * 5,
+                    self.measurementOvalSize + measurementLineSize * 5,
+                ),
+                fillColor=None,
+                strokeColor=ovalColor,
+                strokeWidth=measurementLineSize,
+                name="oval",
+            )
+        )
 
         if self.measureAlways:
             self.wantsMeasurements = True
-
 
         if self.performAnchoring:
             self.wantsMeasurements = False
 
         self.stemPlowRuler.loadNamedMeasurements(self.getFont())
         self.measureAlwaysVisible = self.measureAlways
-
-
-
 
     def destroy(self):
         self.backgroundContainer.clearSublayers()
@@ -237,23 +258,22 @@ class StemPlowSubscriber(subscriber.Subscriber):
         else:
             self.stemPlowRuler.clearNames()
 
-
         # it can catch an error, while self.measurementValue1 or self.measurementValue2 is None. I don't want to add another if statement inside of `self.updateText()`, and catching `self.measurementValue1 is None and self.measurementValue2 is None` seems to be stupid here
         self.updateText()
-
 
         # measurement updates
         if self.performAnchoring:
             if self.stemPlowRuler.anchored:
                 self.wantsMeasurements = False
             else:
-                self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(self.getGlyphEditor().getGlyph().asFontParts())
+                self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(
+                    self.getGlyphEditor().getGlyph().asFontParts()
+                )
 
         if self.measureAlways:
             self.showLayers()
         else:
             self.hideLayersAndClearData()
-
 
     closestPointOnPath = None
     measurementValue1 = 0
@@ -273,15 +293,16 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.hideLayersAndClearData()
 
         if self.performAnchoring:
-            self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info['glyph'])
+            self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info["glyph"])
 
     def glyphEditorDidSetGlyph(self, info):
         if self.performAnchoring:
-            self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info['glyph'])
-
+            self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info["glyph"])
 
     def glyphEditorDidKeyDown(self, info):
-        isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
+        isTriggerCharPressed = (
+            info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
+        )
 
         if isTriggerCharPressed and not self.measureAlways:
             self.wantsMeasurements = True
@@ -309,20 +330,23 @@ class StemPlowSubscriber(subscriber.Subscriber):
                 self.wantsMeasurements = False
 
         # whenever user hits arrow keys it will execute code in glyphEditorDidMouseDrag
-        if info["deviceState"]["keyDown"] in "": # arrow keys:
+        if info["deviceState"]["keyDown"] in "":  # arrow keys:
             self.glyphEditorDidMouseDrag(info)
 
-
-
-
     def glyphEditorDidKeyUp(self, info):
-        isTriggerCharPressed = info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
+        isTriggerCharPressed = (
+            info["deviceState"]["keyDownWithoutModifiers"] == self.triggerCharacter
+        )
         if not self.measureAlways:
             self.hideLayersAndClearData()
         else:
             # getting glyph and current mouse location
-            if self.useShortcutToMoveWhileAlways and isTriggerCharPressed and not self.stemPlowRuler.anchored:
-                self.stemPlowRuler.anchorRuler( info)
+            if (
+                self.useShortcutToMoveWhileAlways
+                and isTriggerCharPressed
+                and not self.stemPlowRuler.anchored
+            ):
+                self.stemPlowRuler.anchorRuler(info)
                 self.updateText()
                 self.updateLinesAndOvals()
 
@@ -344,15 +368,16 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.textBoxCenter2,
             self.measurementValue2,
             self.nearestP2,
-            self.closestPointOnPath
-        ) = self.stemPlowRuler.getThicknessData(None, glyph, self.stemPlowRuler.getGuidesAndAnchoredPoint)
+            self.closestPointOnPath,
+        ) = self.stemPlowRuler.getThicknessData(
+            None, glyph, self.stemPlowRuler.getGuidesAndAnchoredPoint
+        )
 
         self.updateText()
         self.updateLinesAndOvals()
 
     def glyphEditorDidUndo(self, info):
         self.glyphEditorDidMouseDrag(info)
-
 
     def glyphEditorDidMouseDown(self, info):
         if not self.measureAlways:
@@ -364,7 +389,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
         glyph = info["glyph"]
         if len(glyph.contours) + len(glyph.components) == 0:
-                return
+            return
         cursorPosition = tuple(info["locationInGlyph"])
 
         (
@@ -374,10 +399,10 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.textBoxCenter2,
             self.measurementValue2,
             self.nearestP2,
-            self.closestPointOnPath
-        ) = self.stemPlowRuler.getThicknessData(cursorPosition, glyph, self.stemPlowRuler.getGuidesAndClosestPoint)
-
-
+            self.closestPointOnPath,
+        ) = self.stemPlowRuler.getThicknessData(
+            cursorPosition, glyph, self.stemPlowRuler.getGuidesAndClosestPoint
+        )
 
         self.updateText()
         self.updateLinesAndOvals()
@@ -388,12 +413,10 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.showLayers()
 
     def glyphEditorWantsContextualMenuItems(self, info):
-        def _stemPlowGuide( sender):
+        def _stemPlowGuide(sender):
             print("Create Stem Plow Guide – NotImplemented")
 
-        myMenuItems = [
-            ("Create Stem Plow Guide", _stemPlowGuide)
-        ]
+        myMenuItems = [("Create Stem Plow Guide", _stemPlowGuide)]
         info["itemDescriptions"].extend(myMenuItems)
 
     def fontMeasurementsChanged(self, info):
@@ -434,16 +457,19 @@ class StemPlowSubscriber(subscriber.Subscriber):
         else:
             self.stemPlowRuler.clearNames()
 
-
         roundingFloatValue = self.stemPlowRuler.getRoundingFloatValue()
         if round(self.measurementValue1) != 0 and self.textBoxCenter1 is not None:
             self.text1Layer.setVisible(True)
-            self.text1Layer.setText(str(round(self.measurementValue1,roundingFloatValue)))
+            self.text1Layer.setText(
+                str(round(self.measurementValue1, roundingFloatValue))
+            )
             self.text1Layer.setPosition(self.textBoxCenter1)
 
             ###
             if self.stemPlowRuler.currentNames1:
-                self.namedValues1Layer.setText(formatNames(self.stemPlowRuler.currentNames1))
+                self.namedValues1Layer.setText(
+                    formatNames(self.stemPlowRuler.currentNames1)
+                )
                 self.namedValues1Layer.setPosition(self.textBoxCenter1)
                 self.namedValues1Layer.setVisible(True)
             else:
@@ -454,12 +480,16 @@ class StemPlowSubscriber(subscriber.Subscriber):
 
         if round(self.measurementValue2) != 0 and self.textBoxCenter2 is not None:
             self.text2Layer.setVisible(True)
-            self.text2Layer.setText(str(round(self.measurementValue2,roundingFloatValue)))
+            self.text2Layer.setText(
+                str(round(self.measurementValue2, roundingFloatValue))
+            )
             self.text2Layer.setPosition(self.textBoxCenter2)
 
             ###
             if self.stemPlowRuler.currentNames2:
-                self.namedValues2Layer.setText(formatNames(self.stemPlowRuler.currentNames2))
+                self.namedValues2Layer.setText(
+                    formatNames(self.stemPlowRuler.currentNames2)
+                )
                 self.namedValues2Layer.setPosition(self.textBoxCenter2)
                 self.namedValues2Layer.setVisible(True)
             else:
@@ -481,7 +511,6 @@ class StemPlowSubscriber(subscriber.Subscriber):
         else:
             font = glyph.font
         return font
-
 
 
 class StemPlowRuler:
@@ -517,34 +546,32 @@ class StemPlowRuler:
     def anchorRulerToGlyphWithoutCursor(self, glyph):
         # glyph = info["glyph"]
         if len(glyph.contours) > 0 and glyph.lib.get(self.keyId) is None:
-            glyph.lib[self.keyId] = dict(
-                contour_index=0,
-                segment_index=0,
-                anchor_t=0
-                )
+            glyph.lib[self.keyId] = dict(contour_index=0, segment_index=0, anchor_t=0)
         self.anchored = True
 
     def anchorRuler(self, info):
         glyph = info["glyph"]
-        _, contour_index, segment_index, anchor_t = self.calculateDetailsForNearestPointOnCurve(getCurrentPosition(info), glyph)
+        _, contour_index, segment_index, anchor_t = (
+            self.calculateDetailsForNearestPointOnCurve(getCurrentPosition(info), glyph)
+        )
 
         glyph.lib[self.keyId] = dict(
-                contour_index=contour_index,
-                segment_index=segment_index,
-                anchor_t=anchor_t
-            )
+            contour_index=contour_index, segment_index=segment_index, anchor_t=anchor_t
+        )
 
         self.anchored = True
 
     def unanchorRuler(self, info):
         glyph = info["glyph"]
         if self.keyId in glyph.lib.keys():
-            del(glyph.lib[self.keyId])
+            del glyph.lib[self.keyId]
         self.anchored = False
 
     def getGuidesAndAnchoredPoint(self, position, glyph):
         # position has to be there, but it will be set to None
-        assert position is None, f"something wrong with placement of getGuidesAndAnchoredPoint method (position is {position})"
+        assert (
+            position is None
+        ), f"something wrong with placement of getGuidesAndAnchoredPoint method (position is {position})"
         if not self.keyId in glyph.lib.keys():
             self.anchored = False
             return
@@ -593,7 +620,6 @@ class StemPlowRuler:
 
         return guideline1, guideline2, onCurvePoint
 
-
     def calculateDetailsForNearestPointOnCurve(self, cursorPosition, glyph):
         # slow, only used for anchoring
         closestPointsRef = []
@@ -620,8 +646,8 @@ class StemPlowRuler:
                             continue
 
                         P1, P2 = ((P1.x, P1.y), (P2.x, P2.y))
-                        closestPoint, contour_index, segment_index, _, t = StemMath.getClosestInfo(
-                            cursorPosition, seg, P1, P2
+                        closestPoint, contour_index, segment_index, _, t = (
+                            StemMath.getClosestInfo(cursorPosition, seg, P1, P2)
                         )
 
                     if len(points) == 4:
@@ -632,12 +658,14 @@ class StemPlowRuler:
                             (P3.x, P3.y),
                             (P4.x, P4.y),
                         )
-                        closestPoint, contour_index, segment_index, _, t = StemMath.getClosestInfo(
-                            cursorPosition, seg, P1, P2, P3, P4
+                        closestPoint, contour_index, segment_index, _, t = (
+                            StemMath.getClosestInfo(cursorPosition, seg, P1, P2, P3, P4)
                         )
                         #### TODO: Jesli seg.type == qcurve, to przerob to na StemMath.stemThicnkessGuidelines(cursorPosition,seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
 
-                    closestPointsRef.append((closestPoint, contour_index, segment_index, t))
+                    closestPointsRef.append(
+                        (closestPoint, contour_index, segment_index, t)
+                    )
 
             distances = []
 
@@ -654,8 +682,9 @@ class StemPlowRuler:
 
     def loadDefaults(self):
         self.measureAgainstComponents = internalGetDefault("measureAgainstComponents")
-        self.measureAgainstSideBearings = internalGetDefault("measureAgainstSideBearings")
-
+        self.measureAgainstSideBearings = internalGetDefault(
+            "measureAgainstSideBearings"
+        )
 
     def getGuidesAndClosestPoint(self, cursorPosition, glyph):
         """returns 2 intersection lists"""
@@ -720,6 +749,7 @@ class StemPlowRuler:
 
     currentMeasurement1 = None
     currentMeasurement2 = None
+
     def getThicknessData(self, position, glyph, method):
         if len(glyph.contours) == 0:
             return
@@ -727,9 +757,7 @@ class StemPlowRuler:
         # guideline1, guideline2, closestPointOnPath = self.getGuidesAndClosestPoint(
         #     position, glyph
         # )
-        guideline1, guideline2, closestPointOnPath = method(
-            position, glyph
-        )
+        guideline1, guideline2, closestPointOnPath = method(position, glyph)
 
         textBoxCenter1 = None
         nearestP1 = closestPointOnPath
@@ -740,14 +768,22 @@ class StemPlowRuler:
         thicknessValue2 = 0
 
         # if StemMath.lenghtAB(position, closestPointOnPath) < 77:
-        intersectionAB1 = tools.IntersectGlyphWithLine(glyph, guideline1, canHaveComponent=self.measureAgainstComponents, addSideBearings=self.measureAgainstSideBearings)
-        intersectionAB2 = tools.IntersectGlyphWithLine(glyph, guideline2, canHaveComponent=self.measureAgainstComponents, addSideBearings=self.measureAgainstSideBearings)
+        intersectionAB1 = tools.IntersectGlyphWithLine(
+            glyph,
+            guideline1,
+            canHaveComponent=self.measureAgainstComponents,
+            addSideBearings=self.measureAgainstSideBearings,
+        )
+        intersectionAB2 = tools.IntersectGlyphWithLine(
+            glyph,
+            guideline2,
+            canHaveComponent=self.measureAgainstComponents,
+            addSideBearings=self.measureAgainstSideBearings,
+        )
 
         # system of if-statemens to hack the iteration through nearestPoints = nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
         if len(intersectionAB1) != 0:
-            nearestPoints1 = nearestPointFromList(
-                closestPointOnPath, intersectionAB1
-            )
+            nearestPoints1 = nearestPointFromList(closestPointOnPath, intersectionAB1)
             if StemMath.lenghtAB(nearestPoints1[0], closestPointOnPath) < 2.5:
                 # hack for guidelines going into space
                 if len(nearestPoints1) == 1:
@@ -763,9 +799,7 @@ class StemPlowRuler:
 
         # system of if-statemens to hack the iteration through nearestPoints = self.nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
         if len(intersectionAB2) != 0:
-            nearestPoints2 = nearestPointFromList(
-                closestPointOnPath, intersectionAB2
-            )
+            nearestPoints2 = nearestPointFromList(closestPointOnPath, intersectionAB2)
             if StemMath.lenghtAB(nearestPoints2[0], closestPointOnPath) < 2.5:
                 # hack for guidelines going into space
                 if len(nearestPoints2) == 1:
@@ -790,7 +824,7 @@ class StemPlowRuler:
             textBoxCenter2,
             thicknessValue2,
             nearestP2,
-            closestPointOnPath
+            closestPointOnPath,
         )
 
     def clearNames(self):
@@ -867,10 +901,11 @@ try:
         methodName="fontMeasurementsChanged",
         lowLevelEventNames=[key],
         dispatcher="roboFont",
-        delay=0.1
+        delay=0.1,
     )
 except AssertionError:
     pass
+
 
 def main():
     # if AppKit.NSUserName() == "rafalbuchner":
