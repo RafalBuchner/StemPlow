@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "stemplow"
-version = "1.3.0"
+version = "2.0.0"
 description = "RoboFont Tool for measuring the thickness of the stem."
 authors = ["Rafał Buchner <rafal.buchner@gmail.com>"]
 license = "The MIT License: https://github.com/RafalBuchner/StemPlow?tab=MIT-1-ov-file#readme"
