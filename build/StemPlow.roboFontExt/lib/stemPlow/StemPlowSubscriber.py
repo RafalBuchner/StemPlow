@@ -245,6 +245,10 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.foregroundContainer.clearSublayers()
         events.removeObserver(self, extensionID + ".defaultsChanged")
 
+    def clearLayers(self):
+        self.backgroundContainer.clearSublayers()
+        self.foregroundContainer.clearSublayers()
+
     def _hideLayers(self):
         self.backgroundContainer.setVisible(False)
         self.foregroundContainer.setVisible(False)
@@ -311,10 +315,30 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info["glyph"])
 
     def roboFontDidSwitchCurrentGlyph(self, info):
+        def findMiddleOfTheGlyph(info):
+            minx, miny, maxx, maxy = info["glyph"].bounds
+            return ((maxx - minx) / 2 + minx, (maxy - miny) / 2 + miny)
+
         if self.currentGlyphReference != info["glyph"].name:
-            print("RUN")
             if self.performAnchoring:
-                self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info["glyph"])
+                self.stemPlowRuler.anchorRuler(
+                    info, findMiddleOfTheGlyph
+                )  # setting anchor to be the middle of the bounds
+
+                # refreshing drawing by reintroducing data and then updating layers:
+                (
+                    self.textBoxCenter1,
+                    self.measurementValue1,
+                    self.nearestP1,
+                    self.textBoxCenter2,
+                    self.measurementValue2,
+                    self.nearestP2,
+                    self.closestPointOnPath,
+                ) = self.stemPlowRuler.getThicknessData(
+                    None, info["glyph"], self.stemPlowRuler.getGuidesAndAnchoredPoint
+                )
+                self.updateText()
+                self.updateLinesAndOvals()
             self.currentGlyphReference = info["glyph"].name
 
     def glyphEditorDidKeyDown(self, info):
@@ -568,14 +592,16 @@ class StemPlowRuler:
             glyph.lib[self.keyId] = dict(contour_index=0, segment_index=0, anchor_t=0)
         self.anchored = True
 
-    def anchorRuler(self, info):
+    def anchorRuler(self, info, referencePointMethod=getCurrentPosition):
         glyph = info["glyph"]
         if len(glyph.contours) == 0:
             # for glyphs with only components
             glyph = copyDecomposedAndOverlaplessGlyph(glyph)
 
         _, contour_index, segment_index, anchor_t = (
-            self.calculateDetailsForNearestPointOnCurve(getCurrentPosition(info), glyph)
+            self.calculateDetailsForNearestPointOnCurve(
+                referencePointMethod(info), glyph
+            )
         )
         if None in (contour_index, segment_index, anchor_t):
             if self.keyId in glyph.lib.keys():
