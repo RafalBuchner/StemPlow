@@ -1,5 +1,5 @@
 import AppKit  # type: ignore
-import stemPlow.StemMath as StemMath
+import stemPlow.stemmath as StemMath
 from fontParts.world import RGlyph
 from mojo import subscriber  # type: ignore
 from mojo import events  # type: ignore
@@ -10,7 +10,6 @@ from mojo.extensions import (  # type: ignore
     setExtensionDefault,
 )
 from mojo.pens import DecomposePointPen  # type: ignore
-from icecream import ic
 
 ## DEBUGGING SETTINGS:
 if AppKit.NSUserName() == "rafalbuchner":
