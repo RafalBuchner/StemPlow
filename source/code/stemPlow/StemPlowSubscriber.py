@@ -674,67 +674,11 @@ class StemPlowRuler:
         return guideline1, guideline2, onCurvePoint
 
     def calculateDetailsForNearestPointOnCurve(self, cursorPosition, glyph):
-        # slow, only used for anchoring
-        closestPointsRef = []
 
         if cursorPosition != (-3000, -3000):  # if anchor exist
-            for contour in glyph.contours:
-                segs = contour.segments
-
-                for segIndex, seg in enumerate(segs):
-
-                    # rebuilding segment into system 2 points for line and 4 for curve (StemMath needs it):
-                    points = [
-                        segs[segIndex - 1][-1]
-                    ]  # 1adding last point from previous segment
-
-                    for point in seg.points:
-                        points.append(point)  # 2 adding rest of points of the segment
-
-                    if len(points) == 2:
-                        P1, P2 = points
-
-                        # making sure that extension doesn't take open segment of the contour into count
-                        if P1.type == "line" and P2.type == "move":
-                            continue
-
-                        P1, P2 = ((P1.x, P1.y), (P2.x, P2.y))
-                        closestPoint, contour_index, segment_index, _, t = (
-                            StemMath.getClosestInfo(cursorPosition, seg, P1, P2)
-                        )
-
-                    if len(points) == 4:
-                        P1, P2, P3, P4 = points
-                        P1, P2, P3, P4 = (
-                            (P1.x, P1.y),
-                            (P2.x, P2.y),
-                            (P3.x, P3.y),
-                            (P4.x, P4.y),
-                        )
-                        closestPoint, contour_index, segment_index, _, t = (
-                            StemMath.getClosestInfo(cursorPosition, seg, P1, P2, P3, P4)
-                        )
-                        #### TODO: Jesli seg.type == qcurve, to przerob to na StemMath.stemThicnkessGuidelines(cursorPosition,seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
-
-                    closestPointsRef.append(
-                        (closestPoint, contour_index, segment_index, t)
-                    )
-
-            distances = []
-
-            for ref in closestPointsRef:
-                point = ref[0]
-                distance = StemMath.lenghtAB(cursorPosition, point)
-                distances.append(distance)
-
-            if not distances:
-                return None, None, None, None
-
-            indexOfClosestPoint = distances.index(min(distances))
-            closestPointOnPathRef = closestPointsRef[indexOfClosestPoint]
-            closestPoint, contour_index, segment_index, t = closestPointOnPathRef
-
-            return closestPoint, contour_index, segment_index, t
+            return StemMath.calculateDetailsForNearestPointOnCurve(
+                cursorPosition, glyph
+            )
 
     def loadDefaults(self):
         self.measureAgainstComponents = internalGetDefault("measureAgainstComponents")

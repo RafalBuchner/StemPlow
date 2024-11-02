@@ -8,13 +8,187 @@ from fontTools.misc.bezierTools import splitCubicAtT, splitQuadraticAtT
 from typing import Sequence
 from fontParts.base import BaseSegment
 import math
-from typing import Tuple, List
 from numbers import Number
+from dataclasses import dataclass
+from typing import Any
+
+ACCURACY = 18
+
+
+@dataclass
+class SegmentInfo:
+    type: str
+    contour: Any
+    index: int
+    """
+    artificaial segment class specially made for boolean version of calculateDetailsForNearestPointOnCurve
+    """
+
+
+def calculateDetailsForNearestPointOnCurve(cursorPosition, glyph):
+    """
+    Calculate details for the nearest point on a curve to the given cursor position within a glyph.
+    Args:
+        cursorPosition (tuple): A tuple (x, y) representing the cursor position.
+        glyph (Glyph): A glyph object containing contours and segments.
+    Returns:
+        tuple: A tuple containing:
+            - closestPoint (tuple): The coordinates (x, y) of the closest point on the curve.
+            - contour_index (int): The index of the contour containing the closest point.
+            - segment_index (int): The index of the segment containing the closest point.
+            - t (float): The parameter t at which the closest point lies on the segment.
+    """
+
+    # slow, only used for anchoring
+    closestPointsRef = []
+
+    for contour in glyph.contours:
+        segs = contour.segments
+
+        for segIndex, seg in enumerate(segs):
+
+            # rebuilding segment into system 2 points for line and 4 for curve (StemMath needs it):
+            points = [
+                segs[segIndex - 1][-1]
+            ]  # 1adding last point from previous segment
+
+            for point in seg.points:
+                points.append(point)  # 2 adding rest of points of the segment
+
+            if len(points) == 2:
+                P1, P2 = points
+
+                # making sure that extension doesn't take open segment of the contour into count
+                if P1.type == "line" and P2.type == "move":
+                    continue
+
+                P1, P2 = ((P1.x, P1.y), (P2.x, P2.y))
+                closestPoint, contour_index, segment_index, _, t = getClosestInfo(
+                    cursorPosition, seg, P1, P2
+                )
+
+            if len(points) == 4:
+                P1, P2, P3, P4 = points
+                P1, P2, P3, P4 = (
+                    (P1.x, P1.y),
+                    (P2.x, P2.y),
+                    (P3.x, P3.y),
+                    (P4.x, P4.y),
+                )
+                closestPoint, contour_index, segment_index, _, t = getClosestInfo(
+                    cursorPosition, seg, P1, P2, P3, P4
+                )
+                #### TODO: Jesli seg.type == qcurve, to przerob to na StemMath.stemThicnkessGuidelines(cursorPosition,seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
+
+            closestPointsRef.append((closestPoint, contour_index, segment_index, t))
+
+    distances = []
+
+    for ref in closestPointsRef:
+        point = ref[0]
+        distance = lenghtAB(cursorPosition, point)
+        distances.append(distance)
+
+    if not distances:
+        return None, None, None, None
+
+    indexOfClosestPoint = distances.index(min(distances))
+    closestPointOnPathRef = closestPointsRef[indexOfClosestPoint]
+    closestPoint, contour_index, segment_index, t = closestPointOnPathRef
+
+    return closestPoint, contour_index, segment_index, t
+
+
+def calculateDetailsForNearestPointOnCurveBoolean(cursorPosition, glyph):
+    """
+    This is special version of calculateDetailsForNearestPointOnCurve to work with BooleanOperations
+    Calculate details for the nearest point on a curve to the given cursor position within a glyph.
+    Args:
+        cursorPosition (tuple): A tuple (x, y) representing the cursor position.
+        glyph (Glyph): A glyph object containing contours and segments.
+    Returns:
+        tuple: A tuple containing:
+            - closestPoint (tuple): The coordinates (x, y) of the closest point on the curve.
+            - contour_index (int): The index of the contour containing the closest point.
+            - segment_index (int): The index of the segment containing the closest point.
+            - t (float): The parameter t at which the closest point lies on the segment.
+    """
+
+    # slow, only used for anchoring
+    closestPointsRef = []
+
+    for contour_index, contour in enumerate(glyph.contours):
+
+        pointPenPoints = contour._points
+        segIdx = 0
+        for pointIdx, point in enumerate(pointPenPoints):
+            segLength = None
+            match point[0]:  # checking segmentType
+                case "moveTo":
+                    continue
+                case "curve":
+                    segLength = 4
+                case "line":
+                    # line
+                    if pointIdx == 0:
+                        continue
+                    segLength = 2
+                case None:
+                    # curve's handle
+                    continue
+
+            points = pointPenPoints[pointIdx + 1 - segLength : pointIdx + 1]
+            contour.index = contour_index
+            seg = SegmentInfo(points[-1][0], contour, segIdx)
+            segIdx += 1
+
+            if len(points) == 2:
+
+                # making sure that code doesn't take open segment of the contour into count
+                if points[0][0] == "line" and points[1][0] == "move":
+                    continue
+
+                closestPoint, contour_index, segment_index, _, t = getClosestInfo(
+                    cursorPosition,
+                    seg,
+                    points[0][1],
+                    points[1][1],
+                )
+
+            if len(points) == 4:
+
+                closestPoint, contour_index, segment_index, _, t = getClosestInfo(
+                    cursorPosition,
+                    seg,
+                    points[0][1],
+                    points[1][1],
+                    points[2][1],
+                    points[3][1],
+                )
+                #### TODO: Jesli seg.type == qcurve, to przerob to na StemMath.stemThicnkessGuidelines(cursorPosition,seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
+
+            closestPointsRef.append((closestPoint, contour_index, segment_index, t))
+
+    distances = []
+
+    for ref in closestPointsRef:
+        point = ref[0]
+        distance = lenghtAB(cursorPosition, point)
+        distances.append(distance)
+
+    if not distances:
+        return None, None, None, None
+
+    indexOfClosestPoint = distances.index(min(distances))
+    closestPointOnPathRef = closestPointsRef[indexOfClosestPoint]
+    closestPoint, contour_index, segment_index, t = closestPointOnPathRef
+
+    return closestPoint, contour_index, segment_index, t
 
 
 def getClosestInfo(
     cursorPoint: Sequence[Number], segment: BaseSegment, *points
-) -> Tuple[Sequence[Number], int, int, Sequence[Sequence[Number]], Number]:
+) -> tuple[Sequence[Number], int, int, Sequence[Sequence[Number]], Number]:
     """
     returns info about closest point on curve
     """
@@ -23,8 +197,6 @@ def getClosestInfo(
     )
     closestPoint = calcSeg(0.5, *curve)
     contour_index, segment_index, segPoints, curr_t = info
-    # print("getClosestInfo") # DEBUG ISSUE: tuple out of range
-    # print(f"contour_index {contour_index}, segment_index{segment_index}, curr_t{curr_t}")
     return closestPoint, contour_index, segment_index, segPoints, curr_t
 
 
@@ -32,12 +204,12 @@ def closestPointAndT_binaryIndexSearch_withSegments(
     pointOffCurve: Sequence[Number],
     segment: BaseSegment,
     *segPoints: Sequence[Sequence[Number]],
-) -> Tuple[
+) -> tuple[
     Sequence[Sequence[Number]],
-    Tuple[int, int, Sequence[Sequence[Number]], Number],
+    tuple[int, int, Sequence[Sequence[Number]], Number],
 ]:
 
-    curveDiv = 12
+    curveDiv = ACCURACY
     found = False
     count = 0
     points = segPoints
@@ -50,7 +222,7 @@ def closestPointAndT_binaryIndexSearch_withSegments(
         if count == 12:
             break
         count += 1
-        LUT = getLut(segment.type, curveDiv, *points)
+        LUT = getLut(segment.type, accuracy=ACCURACY, points=points)
         minimalDist = 20000
 
         for i in range(curveDiv + 1):
@@ -91,14 +263,14 @@ def closestPointAndT_binaryIndexSearch(
 ) -> Sequence[Sequence[Number]]:
     """Returns the curve, which is segment cut from the given curve."""
 
-    curveDiv = 12
+    curveDiv = ACCURACY
     found = False
     count = 0
     while found == False:
         if count == 10:
             break
         count += 1
-        LUT = getLut(segType, curveDiv, *points)
+        LUT = getLut(segType, accuracy=ACCURACY, points=points)
         minimalDist = 20000
 
         for i in range(curveDiv + 1):
@@ -122,7 +294,7 @@ def closestPointAndT_binaryIndexSearch(
 
 def calculateGuidesBasedOnT(
     t: float, segType: str, *points: Sequence[Sequence[Number]]
-) -> Tuple[
+) -> tuple[
     Sequence[Sequence[Number]],
     Sequence[Sequence[Number]],
 ]:
@@ -162,7 +334,7 @@ def stemThicnkessGuidelines(
     cursorPoint: Sequence[Number],
     segType: str,
     *points: Sequence[Sequence[Number]],
-) -> Tuple[
+) -> tuple[
     Sequence[Sequence[Number]],
     Sequence[Sequence[Number]],
 ]:
@@ -177,7 +349,7 @@ def stemThicnkessGuidelines(
 
 
 def getLut(
-    segType: str, accuracy: int = 12, *points: Sequence[Sequence[Number]]
+    segType: str, points: Sequence[Sequence[Number]], accuracy: int = 12
 ) -> dict[tuple[int, Number], Sequence[Number]]:
     """Returns Look Up Table, which contains pointsOnPath for calcBezier/calcLine,
     if getT=True then returns table with points and their factors"""
@@ -227,12 +399,6 @@ def bs(searchFor, array):
             upperBound = midpoint - 1
 
     raise AssertionError("The value wasn't found in the array")
-
-
-# TODO: DEL
-# def splitSegAtTAndGetNewT(oldT, segType, points, *t):
-#     newT = t[0] * oldT
-#     return newT, splitSegAtT(segType, points, *t)
 
 
 def splitSegAtT(
@@ -508,7 +674,7 @@ def calculateTangentAngle(
 
 def getPerpedicularLineToTangent(
     segType: str, t: float, *points: Sequence[Sequence[Number]]
-) -> Tuple[Sequence[Sequence[Number]], Sequence[Sequence[Number]]]:
+) -> tuple[Sequence[Sequence[Number]], Sequence[Sequence[Number]]]:
     """Calculates 2 perpedicular lines to curve's/line's tangent angle with current t-factor. It places it in the position 00
     returnt two lines, every line has two points
     every point is represented as a touple with x, y values.
