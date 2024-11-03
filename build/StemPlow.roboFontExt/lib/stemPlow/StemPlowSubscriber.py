@@ -75,7 +75,7 @@ def internalSetDefault(key, value):
 
 def nearestPointFromList(myPoint, points):
     def _sorter(point):
-        return StemMath.lenghtAB(myPoint, point)
+        return StemMath.lengthAB(myPoint, point)
 
     points = sorted(points, key=_sorter)
     return points
@@ -710,7 +710,7 @@ class StemPlowRuler:
                             continue
 
                         P1, P2 = ((P1.x, P1.y), (P2.x, P2.y))
-                        l1, l2 = StemMath.stemThicnkessGuidelines(
+                        l1, l2 = StemMath.stemThicknessGuidelines(
                             cursorPosition, seg.type, P1, P2
                         )
 
@@ -722,10 +722,10 @@ class StemPlowRuler:
                             (P3.x, P3.y),
                             (P4.x, P4.y),
                         )
-                        l1, l2 = StemMath.stemThicnkessGuidelines(
+                        l1, l2 = StemMath.stemThicknessGuidelines(
                             cursorPosition, seg.type, P1, P2, P3, P4
                         )
-                        #### TODO: Jesli seg.type == qcurve, to przerob to na StemMath.stemThicnkessGuidelines(cursorPosition,seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
+                        #### TODO: Jesli seg.type == qcurve, to przerob to na StemMath.stemThicknessGuidelines(cursorPosition,seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
 
                     closestPoint = l1[1]
                     closestPointsRef.append((closestPoint, l1, l2))
@@ -734,7 +734,7 @@ class StemPlowRuler:
 
             for ref in closestPointsRef:
                 point = ref[0]
-                distance = StemMath.lenghtAB(cursorPosition, point)
+                distance = StemMath.lengthAB(cursorPosition, point)
                 distances.append(distance)
 
             indexOfClosestPoint = distances.index(min(distances))
@@ -780,7 +780,7 @@ class StemPlowRuler:
         # system of if-statemens to hack the iteration through nearestPoints = nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
         if len(intersectionAB1) != 0:
             nearestPoints1 = nearestPointFromList(closestPointOnPath, intersectionAB1)
-            if StemMath.lenghtAB(nearestPoints1[0], closestPointOnPath) < 2.5:
+            if StemMath.lengthAB(nearestPoints1[0], closestPointOnPath) < 2.5:
                 # hack for guidelines going into space
                 if len(nearestPoints1) == 1:
                     nearestP1 = nearestPoints1[0]
@@ -791,12 +791,12 @@ class StemPlowRuler:
                 nearestP1 = nearestPoints1[0]
 
             textBoxCenter1 = StemMath.calcLine(0.5, closestPointOnPath, nearestP1)
-            thicknessValue1 = StemMath.lenghtAB(closestPointOnPath, nearestP1)
+            thicknessValue1 = StemMath.lengthAB(closestPointOnPath, nearestP1)
 
         # system of if-statemens to hack the iteration through nearestPoints = self.nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
         if len(intersectionAB2) != 0:
             nearestPoints2 = nearestPointFromList(closestPointOnPath, intersectionAB2)
-            if StemMath.lenghtAB(nearestPoints2[0], closestPointOnPath) < 2.5:
+            if StemMath.lengthAB(nearestPoints2[0], closestPointOnPath) < 2.5:
                 # hack for guidelines going into space
                 if len(nearestPoints2) == 1:
                     nearestP2 = nearestPoints2[0]
@@ -806,7 +806,7 @@ class StemPlowRuler:
                 nearestP2 = nearestPoints2[0]
 
             textBoxCenter2 = StemMath.calcLine(0.5, closestPointOnPath, nearestP2)
-            thicknessValue2 = StemMath.lenghtAB(closestPointOnPath, nearestP2)
+            thicknessValue2 = StemMath.lengthAB(closestPointOnPath, nearestP2)
 
         ################
         # Named Values
