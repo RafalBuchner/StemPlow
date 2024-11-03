@@ -8,8 +8,9 @@ git sparse-checkout set stemmath
 version=$(curl -s https://raw.githubusercontent.com/RafalBuchner/stemmath/main/pyproject.toml | grep '^version' | cut -d '"' -f2)
 
 # Move the downloaded folder to the destination directory
-rm -rf ../rb/mat/stemmath
-mv stemmath ../rb/mat/
+rm -rf ../source/code/stemPlow/stemmath
+mkdir -p ../source/code/stemPlow
+mv stemmath ../source/code/stemPlow/
 
 # Clean up
 cd ..
