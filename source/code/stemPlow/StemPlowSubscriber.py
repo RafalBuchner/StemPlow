@@ -10,6 +10,8 @@ from mojo.extensions import (  # type: ignore
     setExtensionDefault,
 )
 from mojo.pens import DecomposePointPen  # type: ignore
+from mojo.pipTools import installNeededPackages
+
 
 ## DEBUGGING SETTINGS:
 if AppKit.NSUserName() == "rafalbuchner":
@@ -890,6 +892,19 @@ class StemPlowRuler:
                 v.sort()
 
 
+class StemPlowStartingSubscriber(subscriber.Subscriber):
+    def roboFontDidFinishLaunching(self, info):
+        installNeededPackages(
+            "StemPlow",
+            [
+                dict(
+                    packageName="bezier",
+                    # importName="quicksilver"
+                )
+            ],
+        )
+
+
 try:
     key = "com.typesupply.LaserMeasure.measurementsChanged"
     subscriber.registerSubscriberEvent(
@@ -911,3 +926,4 @@ def main():
             (key)
         registerExtensionDefaults(defaults)
     subscriber.registerGlyphEditorSubscriber(StemPlowSubscriber)
+    subscriber.registerRoboFontSubscriber(StemPlowStartingSubscriber)
