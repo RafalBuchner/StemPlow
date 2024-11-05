@@ -17,6 +17,7 @@ ACCURACY = 18
 
 __version__ = "0.1.4"
 
+
 @dataclass
 class SegmentInfo:
     type: str
@@ -649,8 +650,8 @@ def getPerpendicularLineToTangent(
     else:
         raise ValueError("Invalid number of points for the given segment type")
 
-    tanPx1, tanPy1 = rotatePoint((0, 1000), tanAngle, (0, 0))  # One line
-    tanPx2, tanPy2 = rotatePoint((0, 1000), tanAngle - 180, (0, 0))  # Second line
+    tanPx1, tanPy1 = rotatePoint((0, 10000), tanAngle, (0, 0))  # One line
+    tanPx2, tanPy2 = rotatePoint((0, 10000), tanAngle - 180, (0, 0))  # Second line
 
     return ((tanPx1, tanPy1), (0, 0)), ((0, 0), (tanPx2, tanPy2))
 

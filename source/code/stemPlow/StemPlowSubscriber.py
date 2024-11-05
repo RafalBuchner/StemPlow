@@ -3,15 +3,14 @@ import stemPlow.stemmath as StemMath
 from fontParts.world import RGlyph
 from mojo import subscriber  # type: ignore
 from mojo import events  # type: ignore
-from mojo import tools  # type: ignore
 from mojo.extensions import (  # type: ignore
     registerExtensionDefaults,
     getExtensionDefault,
     setExtensionDefault,
 )
 from mojo.pens import DecomposePointPen  # type: ignore
-from mojo.pipTools import installNeededPackages
-
+from mojo.pipTools import installNeededPackages  # type: ignore
+import math
 
 ## DEBUGGING SETTINGS:
 if AppKit.NSUserName() == "rafalbuchner":
@@ -98,6 +97,36 @@ def copyDecomposedAndOverlaplessGlyph(srcGlyph: RGlyph) -> RGlyph:
     decomposePen = DecomposePointPen(srcGlyph.font, dstPen)
     srcGlyph.drawPoints(decomposePen)
     dstGlyph.removeOverlap()
+
+    return dstGlyph
+
+
+def copyGlyphWithSidebearings(
+    srcGlyph: RGlyph, offset: float, slantAngle: float | int
+) -> RGlyph:
+    dstGlyph = RGlyph()
+    pen = dstGlyph.getPen()
+
+    offset = offset if slantAngle != 0 else 0
+    x_offset = 5000 * math.tan(math.radians(slantAngle))
+
+    pen.moveTo((x_offset + offset, -5000))
+    pen.lineTo((-x_offset + offset, 5000))
+    pen.endPath()
+    pen.moveTo((srcGlyph.width + x_offset + offset, -5000))
+    pen.lineTo((srcGlyph.width - x_offset + offset, 5000))
+    pen.endPath()
+    srcGlyph.draw(pen)
+    return dstGlyph
+
+
+def copyDecomposedGlyph(srcGlyph: RGlyph) -> RGlyph:
+    # couldn't help myself with the name, and the comment about the name
+    dstGlyph = RGlyph()
+    dstGlyph.width = srcGlyph.width
+    dstPen = dstGlyph.getPointPen()
+    decomposePen = DecomposePointPen(srcGlyph.font, dstPen)
+    srcGlyph.drawPoints(decomposePen)
 
     return dstGlyph
 
@@ -336,8 +365,40 @@ class StemPlowSubscriber(subscriber.Subscriber):
                     self.nearestP2,
                     self.closestPointOnPath,
                 ) = self.stemPlowRuler.getThicknessData(
-                    None, info["glyph"], self.stemPlowRuler.getGuidesAndAnchoredPoint
+                    None,
+                    info["glyph"],
+                    self.stemPlowRuler.getGuidesAndAnchoredPoint,
                 )
+                # # try/except solution is tupid
+                # try:
+                #     (
+                #         self.textBoxCenter1,
+                #         self.measurementValue1,
+                #         self.nearestP1,
+                #         self.textBoxCenter2,
+                #         self.measurementValue2,
+                #         self.nearestP2,
+                #         self.closestPointOnPath,
+                #     ) = self.stemPlowRuler.getThicknessData(
+                #         None,
+                #         info["glyph"],
+                #         self.stemPlowRuler.getGuidesAndAnchoredPoint,
+                #     )
+                # except:
+                #     pos = findMiddleOfTheGlyph(info)
+                #     (
+                #         self.textBoxCenter1,
+                #         self.measurementValue1,
+                #         self.nearestP1,
+                #         self.textBoxCenter2,
+                #         self.measurementValue2,
+                #         self.nearestP2,
+                #         self.closestPointOnPath,
+                #     ) = self.stemPlowRuler.getThicknessData(
+                #         pos,
+                #         info["glyph"],
+                #         self.stemPlowRuler.getGuidesAndAnchoredPoint,
+                #     )
                 self.updateText()
                 self.updateLinesAndOvals()
             self.currentGlyphReference = info["glyph"].name
@@ -676,7 +737,7 @@ class StemPlowRuler:
 
     def calculateDetailsForNearestPointOnCurve(self, cursorPosition, glyph):
 
-        if cursorPosition != (-3000, -3000):  # if anchor exist
+        if cursorPosition != (-7000, -7000):  # if anchor exist
             return StemMath.calculateDetailsForNearestPointOnCurve(
                 cursorPosition, glyph
             )
@@ -691,7 +752,7 @@ class StemPlowRuler:
         """returns 2 intersection lists"""
         closestPointsRef = []
 
-        if cursorPosition != (-3000, -3000):  # if anchor exist
+        if cursorPosition != (-7000, -7000):  # if anchor exist
             for contour in glyph.contours:
                 segs = contour.segments
 
@@ -752,9 +813,21 @@ class StemPlowRuler:
     currentMeasurement2 = None
 
     def getThicknessData(self, position, glyph, method):
-
+        italicSlangAngle = glyph.font.info.italicAngle
+        italicSlantOffset = (
+            glyph.font.lib.get("com.typemytype.robofont.italicSlantOffset", 0)
+            if italicSlangAngle
+            else 0
+        )
         if len(glyph.contours) == 0:
             glyph = copyDecomposedAndOverlaplessGlyph(glyph)
+
+        if self.measureAgainstComponents:
+            glyph = copyDecomposedGlyph(glyph)
+        if self.measureAgainstSideBearings:
+            glyph = copyGlyphWithSidebearings(
+                glyph, italicSlantOffset, italicSlangAngle
+            )
 
         guideline1, guideline2, closestPointOnPath = method(position, glyph)
 
@@ -770,7 +843,10 @@ class StemPlowRuler:
             glyph.naked(), *guideline1
         )
         intersectionAB2 = StemMath.find_intersectionsForDefconGlyph(
-            glyph.naked(), *guideline2
+            glyph.naked(),
+            *guideline2,
+            # canHaveComponent=self.measureAgainstComponents,
+            # addSideBearings=self.measureAgainstSideBearings,
         )
 
         # system of if-statemens to hack the iteration through nearestPoints = nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
