@@ -10,6 +10,8 @@ from mojo.extensions import (  # type: ignore
     setExtensionDefault,
 )
 from mojo.pens import DecomposePointPen  # type: ignore
+from mojo.pipTools import installNeededPackages
+
 
 ## DEBUGGING SETTINGS:
 if AppKit.NSUserName() == "rafalbuchner":
@@ -764,17 +766,11 @@ class StemPlowRuler:
         nearestP2 = closestPointOnPath
         thicknessValue2 = 0
 
-        intersectionAB1 = tools.IntersectGlyphWithLine(
-            glyph,
-            guideline1,
-            canHaveComponent=self.measureAgainstComponents,
-            addSideBearings=self.measureAgainstSideBearings,
+        intersectionAB1 = StemMath.find_intersectionsForDefconGlyph(
+            glyph.naked(), *guideline1
         )
-        intersectionAB2 = tools.IntersectGlyphWithLine(
-            glyph,
-            guideline2,
-            canHaveComponent=self.measureAgainstComponents,
-            addSideBearings=self.measureAgainstSideBearings,
+        intersectionAB2 = StemMath.find_intersectionsForDefconGlyph(
+            glyph.naked(), *guideline2
         )
 
         # system of if-statemens to hack the iteration through nearestPoints = nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
@@ -890,6 +886,19 @@ class StemPlowRuler:
                 v.sort()
 
 
+class StemPlowStartingSubscriber(subscriber.Subscriber):
+    def roboFontDidFinishLaunching(self, info):
+        installNeededPackages(
+            "StemPlow",
+            [
+                dict(
+                    packageName="bezier",
+                    # importName="quicksilver"
+                )
+            ],
+        )
+
+
 try:
     key = "com.typesupply.LaserMeasure.measurementsChanged"
     subscriber.registerSubscriberEvent(
@@ -911,3 +920,4 @@ def main():
             (key)
         registerExtensionDefaults(defaults)
     subscriber.registerGlyphEditorSubscriber(StemPlowSubscriber)
+    subscriber.registerRoboFontSubscriber(StemPlowStartingSubscriber)

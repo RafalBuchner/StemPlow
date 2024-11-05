@@ -1,3 +1,7 @@
+# This file uses the bezier library made by Danny Hermes, which is licensed under the Apache License, Version 2.0.
+# You may obtain a copy of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+
 from __future__ import division
 
 import math
@@ -7,19 +11,25 @@ from typing import Any, Sequence
 
 from fontParts.base import BaseSegment
 from fontTools.misc.bezierTools import splitCubicAtT, splitQuadraticAtT
-from icecream import ic
+
 
 ACCURACY = 18
 
+__version__ = "0.1.4"
 
 @dataclass
 class SegmentInfo:
     type: str
     contour: Any
     index: int
+    points: Sequence
     """
     artificaial segment class specially made for boolean version of calculateDetailsForNearestPointOnCurve
     """
+
+    @property
+    def positions(self):
+        return tuple(point[1] for point in self.points)
 
 
 def calculateDetailsForNearestPointOnCurve(cursorPosition, glyph):
@@ -93,13 +103,13 @@ def calculateDetailsForNearestPointOnCurveBoolean(cursorPosition, glyph):
 
     def __appendPointRefs(points, closestPointsRef, contour, segIdx, contour_index):
         contour.index = contour_index
-        seg = SegmentInfo(points[-1][0], contour, segIdx)
+        seg = SegmentInfo(points[-1][0], contour, segIdx, points)
         if len(points) == 2:
-            closestPoint, contour_index, segment_index, _, t = getClosestInfo(
+            closestPoint, contour_index, _, _, t = getClosestInfo(
                 cursorPosition, seg, points[0][1], points[1][1]
             )
         elif len(points) == 4:
-            closestPoint, contour_index, segment_index, _, t = getClosestInfo(
+            closestPoint, contour_index, _, _, t = getClosestInfo(
                 cursorPosition,
                 seg,
                 points[0][1],
@@ -107,7 +117,7 @@ def calculateDetailsForNearestPointOnCurveBoolean(cursorPosition, glyph):
                 points[2][1],
                 points[3][1],
             )
-        closestPointsRef.append((closestPoint, contour_index, segment_index, t))
+        closestPointsRef.append((closestPoint, seg, t))
 
     closestPointsRef = []
 
@@ -172,9 +182,9 @@ def calculateDetailsForNearestPointOnCurveBoolean(cursorPosition, glyph):
 
     indexOfClosestPoint = distances.index(min(distances))
     closestPointOnPathRef = closestPointsRef[indexOfClosestPoint]
-    closestPoint, contour_index, segment_index, t = closestPointOnPathRef
+    closestPoint, seg, t = closestPointOnPathRef
 
-    return closestPoint, contour_index, segment_index, t
+    return closestPoint, seg, t
 
 
 def getClosestInfo(
@@ -269,11 +279,17 @@ def calculateGuidesBasedOnT(
     Sequence[Sequence[Number]],
 ]:
     """
-    Calculate guidelines for stem thickness.
-    Returns two lines, each line has two points.
-    Each point is represented as a tuple with x, y values.
-    """
+    Calculate guidelines for stem thickness based on a given parameter t and segment type.
 
+    Args:
+        t (float): A parameter used in the calculation.
+        segType (str): The type of segment to be used in the calculation.
+        *points (Sequence[Sequence[Number]]): A variable number of sequences representing points.
+
+    Returns:
+        tuple: A tuple containing two sequences, each representing a guideline.
+               Each guideline is a sequence of two points, where each point is a tuple of x, y coordinates.
+    """
     closestPoint = calcSeg(t, *points)
     guide1, guide2 = getPerpendicularLineToTangent(segType, t, *points)
 
@@ -418,7 +434,9 @@ def calcSeg(t: Number, *points: Sequence[Sequence[Number]]) -> Sequence[Number]:
     elif len(points) == 4:
         return calcBezier(t, *points)
     else:
-        raise ValueError("Invalid number of points for the given segment type")
+        raise ValueError(
+            f"Invalid number of points for the given segment type {points}, {len(points)}"
+        )
 
 
 def lengthAB(A: Sequence[Number], B: Sequence[Number]) -> Number:
@@ -460,7 +478,7 @@ def angle(A: Sequence[Number], B: Sequence[Number]) -> Number:
 
 def calcBezier(t: Number, *pointList: Sequence[Sequence[Number]]) -> Sequence[Number]:
     """Returns coordinates for factor called 't' (from 0 to 1) based on cubic bezier formula."""
-    assert len(pointList) == 4 and isinstance(t, Number)
+    assert len(pointList) == 4 and isinstance(t, Number), f"{len(pointList)}"
     p1x, p1y = pointList[0]
     p2x, p2y = pointList[1]
     p3x, p3y = pointList[2]
@@ -635,3 +653,291 @@ def getPerpendicularLineToTangent(
     tanPx2, tanPy2 = rotatePoint((0, 1000), tanAngle - 180, (0, 0))  # Second line
 
     return ((tanPx1, tanPy1), (0, 0)), ((0, 0), (tanPx2, tanPy2))
+
+
+#########################################################################
+#########################################################################
+#########################################################################
+# intersections
+#########################################################################
+#########################################################################
+#########################################################################
+
+from booleanOperations.booleanGlyph import BooleanGlyph
+import numpy as np
+from fontParts.base import BaseGlyph
+from bezier._speedup import curve_intersections as all_intersections
+
+
+def find_intersectionsForDefconGlyph(
+    glyph: BaseGlyph, line_start: tuple, line_end: tuple
+) -> list:
+    intersections = []
+
+    for contour in glyph:
+        for segIndex, seg in enumerate(contour.segments):
+            points = [contour.segments[segIndex - 1][-1]] + seg
+            match len(points):
+                case 2:
+                    P1, P2 = points
+                    if P1.segmentType == "line" and P2.segmentType == "move":
+                        continue
+                    P1, P2 = ((P1.x, P1.y), (P2.x, P2.y))
+                    intersection = line_segment_intersection(
+                        line_start, line_end, P1, P2
+                    )
+                    if intersection is not None:
+                        intersections.append(intersection)
+
+                case 4:
+                    P1, P2, P3, P4 = points
+                    P1, P2, P3, P4 = (
+                        (P1.x, P1.y),
+                        (P2.x, P2.y),
+                        (P3.x, P3.y),
+                        (P4.x, P4.y),
+                    )
+                    intersection = curve_intersection(
+                        line_start, line_end, (P1, P2, P3, P4)
+                    )
+                    if intersection is not None:
+                        intersections.append(intersection)
+
+    return intersections
+
+
+def find_intersectionsForGlyph(
+    glyph: BaseGlyph, line_start: tuple, line_end: tuple
+) -> list:
+    intersections = []
+
+    for contour in glyph.contours:
+        for segIndex, seg in enumerate(contour.segments):
+            points = [contour.segments[segIndex - 1][-1]] + list(seg.points)
+            match len(points):
+                case 2:
+                    P1, P2 = points
+                    if P1.type == "line" and P2.type == "move":
+                        continue
+                    P1, P2 = ((P1.x, P1.y), (P2.x, P2.y))
+                    intersection = line_segment_intersection(
+                        line_start, line_end, P1, P2
+                    )
+                    if intersection is not None:
+                        intersections.append(intersection)
+
+                case 4:
+                    P1, P2, P3, P4 = points
+                    P1, P2, P3, P4 = (
+                        (P1.x, P1.y),
+                        (P2.x, P2.y),
+                        (P3.x, P3.y),
+                        (P4.x, P4.y),
+                    )
+                    intersection = curve_intersection(
+                        line_start, line_end, (P1, P2, P3, P4)
+                    )
+                    if intersection is not None:
+                        intersections.append(intersection)
+
+    return intersections
+
+
+def find_intersectionsForBooleanGlyph(
+    glyph: BooleanGlyph, line_start: tuple, line_end: tuple
+) -> list:
+    intersections = []
+
+    for contour in glyph.contours:
+        pointPenPoints = contour._points
+        lastCurvePoint = None
+        num_points = len(pointPenPoints)
+
+        for pointIdx, point in enumerate(pointPenPoints):
+            if point[0] == "moveTo":
+                continue
+
+            if point[0] == "curve":
+                if pointIdx == 0:
+                    lastCurvePoint = point
+                    continue
+                elif pointIdx == num_points - 1:
+                    points = [point[1], lastCurvePoint[1]]
+                    intersection = calculate_intersection(line_start, line_end, points)
+                    if intersection:
+                        intersections.append(intersection)
+                    continue
+
+            if point[0] == "line":
+                if pointIdx == 0:
+                    lastCurvePoint = point
+                    continue
+                elif pointIdx == num_points - 1:
+                    points = [pointPenPoints[pointIdx - 1][1], point[1]]
+                    intersection = calculate_intersection(line_start, line_end, points)
+                    if intersection:
+                        intersections.append(intersection)
+                    points = [point[1], lastCurvePoint[1]]
+                    intersection = calculate_intersection(line_start, line_end, points)
+                    if intersection:
+                        intersections.append(intersection)
+                    continue
+
+            if point[0] is None and pointIdx != num_points - 1:
+                continue
+
+            segLength = 4 if point[0] == "curve" else 2 if point[0] == "line" else 3
+
+            if not lastCurvePoint or (
+                pointIdx != num_points - 1 and point[0] is not None
+            ):
+                points = [
+                    pointPenPoints[i][1]
+                    for i in range(pointIdx + 1 - segLength, pointIdx + 1)
+                ]
+            else:
+                points = [
+                    pointPenPoints[i][1]
+                    for i in range(pointIdx + 1 - segLength, pointIdx + 1)
+                ] + [lastCurvePoint[1]]
+
+            intersection = calculate_intersection(line_start, line_end, points)
+            if intersection is not None:
+                intersections.append(intersection)
+
+    return intersections
+
+
+def calculate_intersection(line1_start, line1_end, points):
+
+    if len(points) == 2:
+        # Handle line segment intersection
+        return line_segment_intersection(line1_start, line1_end, points[0], points[1])
+    elif len(points) == 4:
+        # Handle curve intersection
+        return curve_intersection(line1_start, line1_end, points)
+
+
+def line_segment_intersection(line1_start, line1_end, line2_start, line2_end):
+    # this could easily return ts together with nodes
+    curve_nodes = np.asfortranarray(
+        [
+            [line2_start[0], line2_end[0]],
+            [line2_start[1], line2_end[1]],
+        ],
+        dtype=np.float64,  # Ensure the dtype is float64
+    )
+
+    line_nodes = np.asfortranarray(
+        [
+            [line1_start[0], line1_end[0]],
+            [line1_start[1], line1_end[1]],
+        ],
+        dtype=np.float64,  # Ensure the dtype is float64
+    )
+
+    intersections = all_intersections(curve_nodes, line_nodes, False)
+
+    if intersections[0].size > 0:
+        return calcLine(
+            intersections[0][0, 0],
+            (curve_nodes[0][0], curve_nodes[1][0]),
+            (curve_nodes[0][1], curve_nodes[1][1]),
+        )
+
+    return None
+
+
+def curve_intersection(line_start, line_end, curve_points):
+    # this could easily return ts together with nodes
+
+    curve_nodes = np.asfortranarray(
+        [
+            [
+                curve_points[0][0],
+                curve_points[1][0],
+                curve_points[2][0],
+                curve_points[3][0],
+            ],
+            [
+                curve_points[0][1],
+                curve_points[1][1],
+                curve_points[2][1],
+                curve_points[3][1],
+            ],
+        ],
+        dtype=np.float64,  # Ensure the dtype is float64
+    )
+
+    line_nodes = np.asfortranarray(
+        [
+            [line_start[0], line_end[0]],
+            [line_start[1], line_end[1]],
+        ],
+        dtype=np.float64,  # Ensure the dtype is float64
+    )
+
+    intersections = all_intersections(curve_nodes, line_nodes, False)
+
+    if intersections[0].size > 0:
+        return calcBezier(
+            intersections[0][0, 0],
+            *(
+                (curve_nodes[0][0], curve_nodes[1][0]),
+                (curve_nodes[0][1], curve_nodes[1][1]),
+                (curve_nodes[0][2], curve_nodes[1][2]),
+                (curve_nodes[0][3], curve_nodes[1][3]),
+            ),
+        )
+
+    return None
+
+
+if __name__ == "__main__":
+    from pathlib import Path
+    from fontParts.world import OpenFont
+    import time
+
+    rfActive = False
+    try:
+        from mojo import tools  # type: ignore
+
+        font = CurrentFont()  # type: ignore
+        rfActive = True
+    except:
+        rootDir = Path(__file__).parent.parent
+        testsDir = rootDir / "tests"
+        UFOpath = testsDir / "_.ufo"
+        font = OpenFont(UFOpath)
+    ############################### XXX
+    rGlyph = font["test02"].copy()
+    refLine = (-50, -100), (600, 60)
+    ############################### XXX
+    if "intersectionTest" in font:
+        del font["intersectionTest"]
+
+    font["intersectionTest"] = rGlyph
+
+    rGlyph = font["intersectionTest"]
+
+    # glyph = BooleanGlyph(rGlyph)
+
+    # intersectionsA = find_intersectionsForBooleanGlyph(glyph, *refLine)
+
+    # TIME COMPARISON
+
+    start_time = time.time()
+    intersectionsA = find_intersectionsForDefconGlyph(rGlyph.naked(), *refLine)
+    end_time = time.time()
+
+    print(f"RB Execution time: {end_time - start_time} seconds")
+
+    if rfActive:
+        _glyph = font["intersectionTest"]
+        start_time = time.time()
+        intersectionsB = tools.IntersectGlyphWithLine(
+            _glyph,
+            refLine,
+        )
+        end_time = time.time()
+        print(f"RF Execution time: {end_time - start_time} seconds")

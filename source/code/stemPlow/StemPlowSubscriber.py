@@ -767,10 +767,10 @@ class StemPlowRuler:
         thicknessValue2 = 0
 
         intersectionAB1 = StemMath.find_intersectionsForDefconGlyph(
-            glyph.naked(), guideline1
+            glyph.naked(), *guideline1
         )
         intersectionAB2 = StemMath.find_intersectionsForDefconGlyph(
-            glyph.naked(), guideline1
+            glyph.naked(), *guideline2
         )
 
         # system of if-statemens to hack the iteration through nearestPoints = nearestPointFromList(closestPointOnPath,intersectionAB) kind of lists
