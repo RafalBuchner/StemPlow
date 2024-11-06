@@ -131,6 +131,11 @@ def copyDecomposedGlyph(srcGlyph: RGlyph) -> RGlyph:
     return dstGlyph
 
 
+def findMiddleOfTheGlyph(info):
+    minx, miny, maxx, maxy = info["glyph"].bounds
+    return ((maxx - minx) / 2 + minx, (maxy - miny) / 2 + miny)
+
+
 class StemPlowSubscriber(subscriber.Subscriber):
 
     debug = __DEBUG__
@@ -345,9 +350,8 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info["glyph"])
 
     def roboFontDidSwitchCurrentGlyph(self, info):
-        def findMiddleOfTheGlyph(info):
-            minx, miny, maxx, maxy = info["glyph"].bounds
-            return ((maxx - minx) / 2 + minx, (maxy - miny) / 2 + miny)
+        if info["glyph"] is None:
+            return
 
         if self.currentGlyphReference != info["glyph"].name:
             if self.performAnchoring:
@@ -688,14 +692,11 @@ class StemPlowRuler:
             position is None
         ), f"something wrong with placement of getGuidesAndAnchoredPoint method (position is {position})"
         if not self.keyId in glyph.lib.keys():
-            self.anchored = False
-            return
+            self.anchorRuler(dict(glyph=glyph), findMiddleOfTheGlyph)
+
         contour_index = glyph.lib[self.keyId].get("contour_index")
         segment_index = glyph.lib[self.keyId].get("segment_index")
         anchor_t = glyph.lib[self.keyId].get("anchor_t")
-
-        if anchor_t is None:
-            return
 
         contour = glyph.contours[contour_index]
         segs = contour.segments
