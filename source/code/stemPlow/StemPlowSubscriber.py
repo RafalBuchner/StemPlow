@@ -373,36 +373,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
                     info["glyph"],
                     self.stemPlowRuler.getGuidesAndAnchoredPoint,
                 )
-                # # try/except solution is tupid
-                # try:
-                #     (
-                #         self.textBoxCenter1,
-                #         self.measurementValue1,
-                #         self.nearestP1,
-                #         self.textBoxCenter2,
-                #         self.measurementValue2,
-                #         self.nearestP2,
-                #         self.closestPointOnPath,
-                #     ) = self.stemPlowRuler.getThicknessData(
-                #         None,
-                #         info["glyph"],
-                #         self.stemPlowRuler.getGuidesAndAnchoredPoint,
-                #     )
-                # except:
-                #     pos = findMiddleOfTheGlyph(info)
-                #     (
-                #         self.textBoxCenter1,
-                #         self.measurementValue1,
-                #         self.nearestP1,
-                #         self.textBoxCenter2,
-                #         self.measurementValue2,
-                #         self.nearestP2,
-                #         self.closestPointOnPath,
-                #     ) = self.stemPlowRuler.getThicknessData(
-                #         pos,
-                #         info["glyph"],
-                #         self.stemPlowRuler.getGuidesAndAnchoredPoint,
-                #     )
+
                 self.updateText()
                 self.updateLinesAndOvals()
             self.currentGlyphReference = info["glyph"].name
