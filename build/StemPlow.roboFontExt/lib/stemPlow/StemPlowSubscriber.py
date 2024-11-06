@@ -350,6 +350,8 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.stemPlowRuler.anchorRulerToGlyphWithoutCursor(info["glyph"])
 
     def roboFontDidSwitchCurrentGlyph(self, info):
+        if info["glyph"] is None:
+            return
 
         if self.currentGlyphReference != info["glyph"].name:
             if self.performAnchoring:
@@ -686,8 +688,6 @@ class StemPlowRuler:
 
     def getGuidesAndAnchoredPoint(self, position, glyph):
         # position has to be there, but it will be set to None
-        from icecream import ic
-
         assert (
             position is None
         ), f"something wrong with placement of getGuidesAndAnchoredPoint method (position is {position})"
