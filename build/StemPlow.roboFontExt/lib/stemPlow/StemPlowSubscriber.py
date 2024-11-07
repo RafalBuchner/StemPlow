@@ -1,5 +1,4 @@
 import AppKit  # type: ignore
-import stemPlow.stemmath as StemMath
 from fontParts.world import RGlyph
 from mojo import subscriber  # type: ignore
 from mojo import events  # type: ignore
@@ -9,7 +8,30 @@ from mojo.extensions import (  # type: ignore
     setExtensionDefault,
 )
 from mojo.pens import DecomposePointPen  # type: ignore
-from mojo.pipTools import installNeededPackages  # type: ignore
+
+try:
+    import stemPlow.stemmath as StemMath
+except ModuleNotFoundError:
+
+    class StemPlowStartingSubscriber(subscriber.Subscriber):
+        def roboFontDidFinishLaunching(self, info):
+            from mojo.pipTools import installNeededPackages  # type: ignore
+
+            print("initializing StemPlow")
+            installNeededPackages(
+                "StemPlow",
+                [
+                    dict(
+                        packageName="bezier",
+                        # importName="quicksilver"
+                    )
+                ],
+            )
+            print("finished initializing StemPlow")
+
+    subscriber.registerRoboFontSubscriber(StemPlowStartingSubscriber)
+
+
 import math
 
 ## DEBUGGING SETTINGS:
@@ -812,16 +834,12 @@ class StemPlowRuler:
             glyph = copyDecomposedGlyph(glyph)
 
         if self.ignoreOverlapsFlag and not self.measureAgainstComponents:
-            glyph = copyOverlaplessGlyph(glyph)  # XXX
-            print(1, glyph.width)
+            glyph = copyOverlaplessGlyph(glyph)
         elif not self.ignoreOverlapsFlag and self.measureAgainstComponents:
             glyph = copyDecomposedGlyph(glyph)
-            print(2, glyph.width)
         elif self.ignoreOverlapsFlag and self.measureAgainstComponents:
             glyph = copyDecomposedAndOverlaplessGlyph(glyph)
-            print(3, glyph.width)
 
-        print("width", glyph.width)
         if self.measureAgainstSideBearings:
             glyph = copyGlyphWithSidebearings(
                 glyph, italicSlantOffset, italicSlangAngle
@@ -960,19 +978,6 @@ class StemPlowRuler:
                 v.sort()
 
 
-class StemPlowStartingSubscriber(subscriber.Subscriber):
-    def roboFontDidFinishLaunching(self, info):
-        installNeededPackages(
-            "StemPlow",
-            [
-                dict(
-                    packageName="bezier",
-                    # importName="quicksilver"
-                )
-            ],
-        )
-
-
 try:
     key = "com.typesupply.LaserMeasure.measurementsChanged"
     subscriber.registerSubscriberEvent(
@@ -989,9 +994,9 @@ except AssertionError:
 def main():
     from mojo.extensions import removeExtensionDefault
 
+    subscriber.registerGlyphEditorSubscriber(StemPlowSubscriber)
+
     if AppKit.NSUserName() == "rafalbuchner":
         for key in defaults.keys():
             (key)
         registerExtensionDefaults(defaults)
-    subscriber.registerGlyphEditorSubscriber(StemPlowSubscriber)
-    subscriber.registerRoboFontSubscriber(StemPlowStartingSubscriber)
