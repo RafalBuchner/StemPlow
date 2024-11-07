@@ -20,6 +20,8 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         :
         [ ] against SideBearings                    @measureAgainstSideBearings
         :
+        [ ] Ignore Overlaps                         @ignoreOverlapsFlag
+        :
         [ ] display Named Values from Laser Measure @showLaserMeasureNames
         :
         [ ] always                                  @measureAlways
@@ -68,6 +70,7 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
             measureAgainstSideBearings=dict(
                 value=internalGetDefault("measureAgainstSideBearings")
             ),
+            ignoreOverlapsFlag=dict(value=internalGetDefault("ignoreOverlapsFlag")),
             showLaserMeasureNames=dict(
                 value=internalGetDefault("showLaserMeasureNames")
             ),
@@ -148,6 +151,9 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         self.mainCallback(sender)
 
     def measureAgainstSideBearingsCallback(self, sender):
+        self.mainCallback(sender)
+
+    def ignoreOverlapsFlagCallback(self, sender):
         self.mainCallback(sender)
 
     def showLaserMeasureNamesCallback(self, sender):
