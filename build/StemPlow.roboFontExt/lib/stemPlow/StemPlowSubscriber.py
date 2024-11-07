@@ -824,7 +824,12 @@ class StemPlowRuler:
     currentMeasurement2 = None
 
     def getThicknessData(self, position, glyph, method):
-        italicSlangAngle = glyph.font.info.italicAngle
+        italicSlangAngle = (
+            glyph.font.info.italicAngle
+            if glyph.font.info.italicAngle is not None
+            else 0
+        )
+        print("italicSlangAngle", italicSlangAngle)
         italicSlantOffset = (
             glyph.font.lib.get("com.typemytype.robofont.italicSlantOffset", 0)
             if italicSlangAngle
