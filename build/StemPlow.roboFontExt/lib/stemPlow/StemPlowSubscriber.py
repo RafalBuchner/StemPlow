@@ -407,7 +407,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
                     self.nearestP2,
                     self.closestPointOnPath,
                 ) = self.stemPlowRuler.getThicknessData(
-                    None,
+                    dict(position=None),
                     info["glyph"],
                     self.stemPlowRuler.getGuidesAndAnchoredPoint,
                 )
@@ -487,7 +487,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.nearestP2,
             self.closestPointOnPath,
         ) = self.stemPlowRuler.getThicknessData(
-            None, glyph, self.stemPlowRuler.getGuidesAndAnchoredPoint
+            dict(position=None), glyph, self.stemPlowRuler.getGuidesAndAnchoredPoint
         )
 
         self.updateText()
@@ -510,7 +510,9 @@ class StemPlowSubscriber(subscriber.Subscriber):
         cursorPosition = tuple(info["locationInGlyph"])
 
         thicknessData = self.stemPlowRuler.getThicknessData(
-            cursorPosition, glyph, self.stemPlowRuler.getGuidesAndClosestPoint
+            dict(position=cursorPosition),
+            glyph,
+            self.stemPlowRuler.getGuidesAndClosestPoint,
         )
         if thicknessData:
             (
@@ -695,10 +697,10 @@ class StemPlowRuler:
             del glyph.lib[self.keyId]
         self.anchored = False
 
-    def getGuidesAndAnchoredPoint(self, position, glyph):
+    def getGuidesAndAnchoredPoint(self, data, glyph):
         # position has to be there, but it will be set to None
         assert (
-            position is None
+            data.get("position", None) is None
         ), f"something wrong with placement of getGuidesAndAnchoredPoint method (position is {position})"
         if not self.keyId in glyph.lib.keys():
             self.anchorRuler(dict(glyph=glyph), findMiddleOfTheGlyph)
@@ -759,11 +761,11 @@ class StemPlowRuler:
             "measureAgainstSideBearings"
         )
 
-    def getGuidesAndClosestPoint(self, cursorPosition, glyph):
+    def getGuidesAndClosestPoint(self, data, glyph):
         """returns 2 intersection lists"""
         closestPointsRef = []
 
-        if cursorPosition != (-7000, -7000):  # if anchor exist
+        if data["position"] != (-7000, -7000):  # if anchor exist
             for contour in glyph.contours:
                 segs = contour.segments
 
@@ -785,7 +787,7 @@ class StemPlowRuler:
 
                         P1, P2 = ((P1.x, P1.y), (P2.x, P2.y))
                         l1, l2 = StemMath.stemThicknessGuidelines(
-                            cursorPosition, seg.type, P1, P2
+                            data["position"], seg.type, P1, P2
                         )
 
                     if len(points) == 4:
@@ -797,9 +799,9 @@ class StemPlowRuler:
                             (P4.x, P4.y),
                         )
                         l1, l2 = StemMath.stemThicknessGuidelines(
-                            cursorPosition, seg.type, P1, P2, P3, P4
+                            data["position"], seg.type, P1, P2, P3, P4
                         )
-                        #### TODO: Jesli seg.type == qcurve, to przerob to na StemMath.stemThicknessGuidelines(cursorPosition,seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
+                        #### TODO: Jesli seg.type == qcurve, to przerob to na StemMath.stemThicknessGuidelines(data["position"],seg.type,P1,P2,P3), wtedy zmien funkcje z TMath na takie, co to będą czystsze jesli chodzi o adekwatnosc do Cubic
 
                     closestPoint = l1[1]
                     closestPointsRef.append((closestPoint, l1, l2))
@@ -808,7 +810,7 @@ class StemPlowRuler:
 
             for ref in closestPointsRef:
                 point = ref[0]
-                distance = StemMath.lengthAB(cursorPosition, point)
+                distance = StemMath.lengthAB(data["position"], point)
                 distances.append(distance)
 
             indexOfClosestPoint = distances.index(min(distances))
@@ -823,13 +825,13 @@ class StemPlowRuler:
     currentMeasurement1 = None
     currentMeasurement2 = None
 
-    def getThicknessData(self, position, glyph, method):
+    def getThicknessData(self, data, glyph, method):
         italicSlangAngle = (
             glyph.font.info.italicAngle
             if glyph.font.info.italicAngle is not None
             else 0
         )
-        print("italicSlangAngle", italicSlangAngle)
+
         italicSlantOffset = (
             glyph.font.lib.get("com.typemytype.robofont.italicSlantOffset", 0)
             if italicSlangAngle
@@ -850,7 +852,7 @@ class StemPlowRuler:
                 glyph, italicSlantOffset, italicSlangAngle
             )
 
-        guideline1, guideline2, closestPointOnPath = method(position, glyph)
+        guideline1, guideline2, closestPointOnPath = method(data, glyph)
 
         textBoxCenter1 = None
         nearestP1 = closestPointOnPath
