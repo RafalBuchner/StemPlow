@@ -169,7 +169,7 @@ def copyDecomposedGlyph(srcGlyph: RGlyph) -> RGlyph:
 
 
 def findMiddleOfTheGlyph(info):
-    debugFunctionNestingChain()
+    # debugFunctionNestingChain()
     minx, miny, maxx, maxy = info["glyph"].bounds
     return ((maxx - minx) / 2 + minx, (maxy - miny) / 2 + miny)
 
@@ -408,7 +408,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
                     self.nearestP2,
                     self.closestPointOnPath,
                 ) = self.stemPlowRuler.getThicknessData(
-                    dict(anchorData=info["glyph"].lib[self.stemPlowRuler.keyId]),
+                    dict(position=None),
                     info["glyph"],
                     self.stemPlowRuler.getGuidesAndAnchoredPoint,
                 )
@@ -488,7 +488,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.nearestP2,
             self.closestPointOnPath,
         ) = self.stemPlowRuler.getThicknessData(
-            dict(anchorData=info["glyph"].lib[self.stemPlowRuler.keyId]),
+            dict(anchorData=info["glyph"].lib[self.stemPlowRuler]),
             glyph,
             self.stemPlowRuler.getGuidesAndAnchoredPoint,
         )
@@ -706,7 +706,6 @@ class StemPlowRuler:
             data.get("position", None) is None
         ), f"something wrong with placement of getGuidesAndAnchoredPoint method (position is {position})"
         if not self.keyId in glyph.lib.keys():
-            print("DEBUG", data)
             self.anchorRuler(dict(glyph=glyph), findMiddleOfTheGlyph)
 
         contour_index = data["anchorData"].get("contour_index")
