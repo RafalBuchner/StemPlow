@@ -15,16 +15,16 @@ class _StemPlowSettingsWindowController(ezui.WindowController):
         content = """
         = TwoColumnForm
 
-        : Measure:
-        [ ] against Components                      @measureAgainstComponents
+        : Guide behaviour:
+        [ ] Measurements against Components                      @measureAgainstComponents
         :
-        [ ] against SideBearings                    @measureAgainstSideBearings
+        [ ] Measurements against Sidebearings                    @measureAgainstSideBearings
         :
         [ ] Ignore Overlaps                         @ignoreOverlapsFlag
         :
-        [ ] display Named Values from Laser Measure @showLaserMeasureNames
+        [ ] Named Values from Laser Measure @showLaserMeasureNames
         :
-        [ ] always                                  @measureAlways
+        [ ] Always Show Measurement Line                                  @measureAlways
         : Trigger behaviour:
         [ ] anchor guide to the outline             @useShortcutToMoveWhileAlways
 
