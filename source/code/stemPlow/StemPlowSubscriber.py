@@ -50,6 +50,7 @@ defaults = {
     extensionKeyStub + "measurementOvalSize": 6,
     extensionKeyStub + "measurementLineSize": 1,
     extensionKeyStub + "measurementTextSize": 10,
+    extensionKeyStub + "ignoreOverlapsFlag": False,
     extensionKeyStub + "measureAgainstComponents": True,
     extensionKeyStub + "measureAgainstSideBearings": True,
     extensionKeyStub + "showLaserMeasureNames": True,
@@ -89,15 +90,29 @@ def getCurrentPosition(info):
     return (cursorPosition.x, cursorPosition.y)
 
 
+# FIXME cleanup those:
+
+
+def copyOverlaplessGlyph(srcGlyph: RGlyph) -> RGlyph:
+    # couldn't help myself with the name, and the comment about the name
+    dstGlyph = RGlyph()
+    dstPen = dstGlyph.getPointPen()
+    srcGlyph.drawPoints(dstPen)
+    dstGlyph.removeOverlap()
+
+    dstGlyph.width = srcGlyph.width
+    return dstGlyph
+
+
 def copyDecomposedAndOverlaplessGlyph(srcGlyph: RGlyph) -> RGlyph:
     # couldn't help myself with the name, and the comment about the name
     dstGlyph = RGlyph()
-    dstGlyph.width = srcGlyph.width
     dstPen = dstGlyph.getPointPen()
     decomposePen = DecomposePointPen(srcGlyph.font, dstPen)
     srcGlyph.drawPoints(decomposePen)
     dstGlyph.removeOverlap()
 
+    dstGlyph.width = srcGlyph.width
     return dstGlyph
 
 
@@ -106,7 +121,7 @@ def copyGlyphWithSidebearings(
 ) -> RGlyph:
     dstGlyph = RGlyph()
     pen = dstGlyph.getPen()
-
+    srcGlyph.draw(pen)
     offset = offset if slantAngle != 0 else 0
     x_offset = 5000 * math.tan(math.radians(slantAngle))
 
@@ -116,18 +131,18 @@ def copyGlyphWithSidebearings(
     pen.moveTo((srcGlyph.width + x_offset + offset, -5000))
     pen.lineTo((srcGlyph.width - x_offset + offset, 5000))
     pen.endPath()
-    srcGlyph.draw(pen)
+    dstGlyph.width = srcGlyph.width
     return dstGlyph
 
 
 def copyDecomposedGlyph(srcGlyph: RGlyph) -> RGlyph:
     # couldn't help myself with the name, and the comment about the name
     dstGlyph = RGlyph()
-    dstGlyph.width = srcGlyph.width
     dstPen = dstGlyph.getPointPen()
     decomposePen = DecomposePointPen(srcGlyph.font, dstPen)
     srcGlyph.drawPoints(decomposePen)
 
+    dstGlyph.width = srcGlyph.width
     return dstGlyph
 
 
@@ -210,6 +225,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
         self.useShortcutToMoveWhileAlways = bool(
             internalGetDefault("useShortcutToMoveWhileAlways")
         )
+        self.ignoreOverlapsFlag = bool(internalGetDefault("ignoreOverlapsFlag"))
         self.measureAgainstComponents = bool(
             internalGetDefault("measureAgainstComponents")
         )
@@ -715,6 +731,7 @@ class StemPlowRuler:
             )
 
     def loadDefaults(self):
+        self.ignoreOverlapsFlag = internalGetDefault("ignoreOverlapsFlag")
         self.measureAgainstComponents = internalGetDefault("measureAgainstComponents")
         self.measureAgainstSideBearings = internalGetDefault(
             "measureAgainstSideBearings"
@@ -792,10 +809,15 @@ class StemPlowRuler:
             else 0
         )
         if len(glyph.contours) == 0:
+            glyph = copyDecomposedGlyph(glyph)
+
+        if self.ignoreOverlapsFlag and not self.measureAgainstComponents:
+            glyph = copyOverlaplessGlyph(glyph)
+        elif not self.ignoreOverlapsFlag and self.measureAgainstComponents:
+            glyph = copyDecomposedGlyph(glyph)
+        elif self.ignoreOverlapsFlag and self.measureAgainstComponents:
             glyph = copyDecomposedAndOverlaplessGlyph(glyph)
 
-        if self.measureAgainstComponents:
-            glyph = copyDecomposedGlyph(glyph)
         if self.measureAgainstSideBearings:
             glyph = copyGlyphWithSidebearings(
                 glyph, italicSlantOffset, italicSlangAngle
