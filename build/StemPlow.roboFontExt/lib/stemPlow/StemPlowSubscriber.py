@@ -408,7 +408,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
                     self.nearestP2,
                     self.closestPointOnPath,
                 ) = self.stemPlowRuler.getThicknessData(
-                    dict(position=None),
+                    dict(anchorData=info["glyph"].lib[self.stemPlowRuler.keyId]),
                     info["glyph"],
                     self.stemPlowRuler.getGuidesAndAnchoredPoint,
                 )
@@ -488,7 +488,7 @@ class StemPlowSubscriber(subscriber.Subscriber):
             self.nearestP2,
             self.closestPointOnPath,
         ) = self.stemPlowRuler.getThicknessData(
-            dict(anchorData=info["glyph"].lib[self.stemPlowRuler]),
+            dict(anchorData=info["glyph"].lib[self.stemPlowRuler.keyId]),
             glyph,
             self.stemPlowRuler.getGuidesAndAnchoredPoint,
         )
