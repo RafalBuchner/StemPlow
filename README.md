@@ -12,12 +12,10 @@ You can edit its shortcut, behaviour and appearance by going to
 > ## Version log:
 >
 > - version 1.220
->
 >   - `Measure always` now can be triggered On/Off with trigger key (works when `anchor guide to the outline` is off)
 >   - Some bug fixes that hopefully will work ([github issue report](https://github.com/RafalBuchner/StemPlow/issues/4#issue-1840248227))
 >
 > - version 1.212
->
 >   - `Measure always` an option, which allows you to see the StemPlow all the time
 >   - Anchoring System ( in order to turn it on check `anchor guide to the outline` in the settings, while `measure always` is on as well )
 >     > When this option is turned on as well as `measure always`, use your shortcut to anchor and unanchor StemPlow to your outlines. The ruler should stick to your shape.
@@ -26,7 +24,6 @@ You can edit its shortcut, behaviour and appearance by going to
 >   - Floating points in text boxes now depend on GlyphEditor's scale. The more you scale, the more digits appear after the floating point.
 >
 > - version 1.2
->
 >   - Update to Merz
 >   - Changing it behaviour from "tool" to "preview on hotkey."
 >   - I am adding a lovely settings window.
@@ -40,6 +37,8 @@ You can edit its shortcut, behaviour and appearance by going to
 >   - Anchoring is less annoying.
 >     (is more understandable programmatically)
 >   - I've moved StemMath to a separate repo: [stemmath](https://github.com/RafalBuchner/stemmath).
+> - version 1.5.3
+>   - moved from (sadly) nearly discontinued interection [algorithm](https://github.com/dhermes/bezier) to fonttools intersection, that is actually very fast
 
 ---
 
