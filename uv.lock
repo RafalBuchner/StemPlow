@@ -12,22 +12,6 @@ wheels = [
 ]
 
 [[package]]
-name = "bezier"
-version = "2024.6.20"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "numpy" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/1d/1a/28aa7a72a5029f416c7d04c5cdae1b0b00d1c6c72a986689458e8e586446/bezier-2024.6.20.tar.gz", hash = "sha256:0b46357eb6019f969a583093f66e6b73747d5e41c10d9f3dfe327b2aa43dff8c", size = 354590 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0d/4b/dcfed092496f53565d40f7c3846db030babb227d9e25e44c7e1d4371713f/bezier-2024.6.20-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:e18733c1fcf01a08822e6e8a6f86eb6e56067f368e4b09653d25368881765d7d", size = 1246686 },
-    { url = "https://files.pythonhosted.org/packages/03/4d/a71c92270739cba039bc110e0c805c3b2f2c8360d7fac3ec861842443571/bezier-2024.6.20-cp312-cp312-macosx_14_0_x86_64.whl", hash = "sha256:bbe9e09dfee5cd23033aa4caf3b32b3d05d5977604b95b9c4e0220376c3c34b6", size = 1903253 },
-    { url = "https://files.pythonhosted.org/packages/f1/3c/326228895c155a657079ac0094e8a3d225986332cc5b4c838f48ec18fbad/bezier-2024.6.20-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:5199407fb9ad8bbae313dde49119ee33d684c2f81358082edea97345df6f493c", size = 1972128 },
-    { url = "https://files.pythonhosted.org/packages/00/a5/dfa67b0de68ca25f37eeef3b85686f191991e8f20f76fdbde870dacb1c56/bezier-2024.6.20-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:21241b81f75739e2cfb2f705a9bb6e55489cc2d8a1d2a514b68ca55514aa5f09", size = 2556550 },
-    { url = "https://files.pythonhosted.org/packages/11/3c/713170cd340a8fc81cc9acb88a5c371f9aaf43102bcdfec9e543843faee4/bezier-2024.6.20-cp312-cp312-win_amd64.whl", hash = "sha256:8cf8c3e373440f799a48ccdf51bdd6428ceef5e1dd9bae9eb01711a0a73b8fdc", size = 1802892 },
-]
-
-[[package]]
 name = "booleanoperations"
 version = "0.10.0"
 source = { registry = "https://pypi.org/simple" }
@@ -519,10 +503,9 @@ wheels = [
 
 [[package]]
 name = "stemplow"
-version = "1.5.2"
+version = "1.5.3"
 source = { editable = "." }
 dependencies = [
-    { name = "bezier" },
     { name = "fontparts" },
     { name = "fonttools" },
     { name = "gitpython" },
@@ -533,7 +516,6 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bezier" },
     { name = "fontparts", specifier = ">=0.12.2" },
     { name = "fonttools", specifier = ">=4.54.1" },
     { name = "gitpython", specifier = ">=3.1.43" },
