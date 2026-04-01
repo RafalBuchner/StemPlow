@@ -9,27 +9,7 @@ from mojo.extensions import (  # type: ignore
 )
 from mojo.pens import DecomposePointPen  # type: ignore
 
-try:
-    import stemPlow.stemmath as StemMath
-except ModuleNotFoundError:
-
-    class StemPlowStartingSubscriber(subscriber.Subscriber):
-        def roboFontDidFinishLaunching(self, info):
-            from mojo.pipTools import installNeededPackages  # type: ignore
-
-            print("initializing StemPlow")
-            installNeededPackages(
-                "StemPlow",
-                [
-                    dict(
-                        packageName="bezier",
-                        # importName="quicksilver"
-                    )
-                ],
-            )
-            print("finished initializing StemPlow")
-
-    subscriber.registerRoboFontSubscriber(StemPlowStartingSubscriber)
+import stemPlow.stemmath as StemMath
 
 
 import math

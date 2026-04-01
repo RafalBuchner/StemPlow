@@ -1,5 +1,3 @@
-# This file uses the bezier library made by Danny Hermes, which is licensed under the Apache License, Version 2.0.
-# You may obtain a copy of the License at https://www.apache.org/licenses/LICENSE-2.0
 
 
 from __future__ import division
@@ -10,7 +8,12 @@ from numbers import Number
 from typing import Any, Sequence
 
 from fontParts.base import BaseSegment
-from fontTools.misc.bezierTools import splitCubicAtT, splitQuadraticAtT
+from fontTools.misc.bezierTools import (
+    splitCubicAtT,
+    splitQuadraticAtT,
+    curveLineIntersections,
+    lineLineIntersections,
+)
 
 
 ACCURACY = 18
@@ -665,9 +668,7 @@ def getPerpendicularLineToTangent(
 #########################################################################
 
 from booleanOperations.booleanGlyph import BooleanGlyph
-import numpy as np
 from fontParts.base import BaseGlyph
-from bezier._speedup import curve_intersections as all_intersections
 
 
 def find_intersectionsForDefconGlyph(
@@ -820,77 +821,16 @@ def calculate_intersection(line1_start, line1_end, points):
 
 
 def line_segment_intersection(line1_start, line1_end, line2_start, line2_end):
-    # this could easily return ts together with nodes
-    curve_nodes = np.asfortranarray(
-        [
-            [line2_start[0], line2_end[0]],
-            [line2_start[1], line2_end[1]],
-        ],
-        dtype=np.float64,  # Ensure the dtype is float64
-    )
-
-    line_nodes = np.asfortranarray(
-        [
-            [line1_start[0], line1_end[0]],
-            [line1_start[1], line1_end[1]],
-        ],
-        dtype=np.float64,  # Ensure the dtype is float64
-    )
-
-    intersections = all_intersections(curve_nodes, line_nodes, False)
-
-    if intersections[0].size > 0:
-        return calcLine(
-            intersections[0][0, 0],
-            (curve_nodes[0][0], curve_nodes[1][0]),
-            (curve_nodes[0][1], curve_nodes[1][1]),
-        )
-
+    for i in lineLineIntersections(line2_start, line2_end, line1_start, line1_end):
+        if 0 <= i.t1 <= 1 and 0 <= i.t2 <= 1:
+            return i.pt
     return None
 
 
 def curve_intersection(line_start, line_end, curve_points):
-    # this could easily return ts together with nodes
-
-    curve_nodes = np.asfortranarray(
-        [
-            [
-                curve_points[0][0],
-                curve_points[1][0],
-                curve_points[2][0],
-                curve_points[3][0],
-            ],
-            [
-                curve_points[0][1],
-                curve_points[1][1],
-                curve_points[2][1],
-                curve_points[3][1],
-            ],
-        ],
-        dtype=np.float64,  # Ensure the dtype is float64
-    )
-
-    line_nodes = np.asfortranarray(
-        [
-            [line_start[0], line_end[0]],
-            [line_start[1], line_end[1]],
-        ],
-        dtype=np.float64,  # Ensure the dtype is float64
-    )
-
-    intersections = all_intersections(curve_nodes, line_nodes, False)
-
-    if intersections[0].size > 0:
-        return calcBezier(
-            intersections[0][0, 0],
-            *(
-                (curve_nodes[0][0], curve_nodes[1][0]),
-                (curve_nodes[0][1], curve_nodes[1][1]),
-                (curve_nodes[0][2], curve_nodes[1][2]),
-                (curve_nodes[0][3], curve_nodes[1][3]),
-            ),
-        )
-
+    for i in curveLineIntersections(curve_points, (line_start, line_end)):
+        if 0 <= i.t2 <= 1:
+            return i.pt
     return None
 
 
