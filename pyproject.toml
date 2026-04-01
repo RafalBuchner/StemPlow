@@ -1,6 +1,6 @@
 [project]
 name = "stemplow"
-version = "1.5.2"
+version = "1.5.3"
 description = "RoboFont Tool for measuring the thickness of the stem."
 authors = [{ name = "Rafał Buchner", email = "rafal.buchner@gmail.com" }]
 license = { text = "MIT" }
@@ -12,7 +12,6 @@ dependencies = [
     "icecream>=2.1.3",
     "gitpython>=3.1.43",
     "roboFontExtensionBundle",
-    "bezier",
     "shapely",
 ]
 
