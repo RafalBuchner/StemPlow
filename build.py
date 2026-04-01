@@ -10,7 +10,7 @@ from mojo.extensions import ExtensionBundle  # type: ignore
 def getVersionFromPyProject():
     pyprojectPath = Path(__file__).parent / "pyproject.toml"
     pyProjectMetadata = tomllib.loads(pyprojectPath.read_text(encoding="utf-8"))
-    return pyProjectMetadata["tool"]["poetry"]["version"]
+    return pyProjectMetadata["project"]["version"]
 
 
 __version__ = getVersionFromPyProject()
